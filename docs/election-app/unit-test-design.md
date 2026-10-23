@@ -59,7 +59,7 @@ Decision table of `whyBallotIsClosed(now, electionOpensAt, districtClosedAt)`:
 | UT-C3 | close | Closing time = what the stubbed clock says | **Stub** | 2.3.3 | `pollClosing.test.ts` |
 | UT-C4 | close | `DistrictRepository.close` called once with the district and the clock time | **Mock** | 2.3.5 | `pollClosing.test.ts` |
 
-The earlier workshop tests (`test/unit/*.test.ts`, steps 02-04 and 06-07) cover the remaining units from the table in section 1.
+The earlier workshop tests (`test/unit/*.test.ts`, steps 02-04 and 06-07) cover the remaining units from the table in section 1. On the branch `election/vv-improved` the vote logic became a unit too (`VoteService`, `test/unit/voteService.test.ts`, cases VT-1 to VT-18).
 
 ## 4. Requirement checklist (assignment 2.3)
 
