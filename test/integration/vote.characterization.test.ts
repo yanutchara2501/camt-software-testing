@@ -2,8 +2,8 @@ import request from 'supertest';
 import { Pool } from 'pg';
 import { createApp, pgDeps } from '../../src/app';
 import { JwtTokenService } from '../../src/auth/tokenService';
+import { Clock } from '../../src/clock';
 import { Candidate } from '../../src/domain/types';
-import { pool as legacyPool } from '../../src/db';
 import { aCandidate, aCommissioner, aVoter } from '../support/builders';
 import { createTestPool, truncateAll } from './support/database';
 import { givenFor } from './support/given';
@@ -13,6 +13,10 @@ import { givenFor } from './support/given';
 // code around it and see immediately if I changed the behaviour by accident.
 // A "weird" result is written down as it is and marked with WEIRD, but not fixed here.
 describe('vote routes: characterization', () => {
+  // The clock is injected now, so the test no longer depends on the real time.
+  const now = new Date('2026-10-04T10:00:00.000Z');
+  const fixedClock: Clock = { now: () => now };
+
   let pool: Pool;
   let app: ReturnType<typeof createApp>;
   let given: ReturnType<typeof givenFor>;
@@ -22,20 +26,19 @@ describe('vote routes: characterization', () => {
   beforeAll(() => {
     pool = createTestPool();
     const tokens = new JwtTokenService('test-secret');
-    app = createApp(pgDeps(pool, tokens));
+    app = createApp(pgDeps(pool, tokens, { clock: fixedClock }));
     given = givenFor(pool, tokens);
   });
 
   beforeEach(async () => {
     await truncateAll(pool);
-    await given.electionOpenedAt(new Date(Date.now() - 60 * 60 * 1000)); // opened an hour ago (real time: no seam for the clock yet)
+    await given.electionOpenedAt(new Date('2026-10-04T09:00:00.000Z')); // opened an hour before the fixed clock
     first = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(1));
     second = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(2));
   });
 
   afterAll(async () => {
-    await pool.end();
-    await legacyPool.end(); // the legacy route uses its own global pool, which is why this line is needed at all
+    await pool.end(); // no second global pool to close any more
   });
 
   describe('PUT /me/vote', () => {
@@ -49,7 +52,7 @@ describe('vote routes: characterization', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({ candidateId: first.id, changed: false });
-      expect(new Date(response.body.votedAt).getTime()).not.toBeNaN();
+      expect(response.body.votedAt).toBe(now.toISOString());
     });
 
     it('lets the voter change the vote: 200 and changed:true, and still only one row for the voter', async () => {
@@ -106,7 +109,7 @@ describe('vote routes: characterization', () => {
     });
 
     it('answers 409 "election is not open" before the opening time', async () => {
-      await given.electionOpenedAt(new Date(Date.now() + 60 * 60 * 1000));
+      await given.electionOpenedAt(new Date('2026-10-04T11:00:00.000Z')); // opens an hour after the fixed clock
       const voter = await given.user(aVoter().inDistrict('CM-1'));
 
       const response = await request(app)

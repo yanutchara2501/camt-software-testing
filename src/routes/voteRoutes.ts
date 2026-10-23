@@ -4,13 +4,15 @@ import { Router } from 'express';
 import { Pool } from 'pg';
 import { authenticate, principalOf } from '../auth/middleware';
 import { TokenService } from '../auth/tokenService';
+import { Clock } from '../clock';
 
 export interface VoteRouteDeps {
   pool: Pool;
   tokens: TokenService;
+  clock: Clock;
 }
 
-export function voteRoutes({ pool, tokens }: VoteRouteDeps): Router {
+export function voteRoutes({ pool, tokens, clock }: VoteRouteDeps): Router {
   const router = Router();
   const loggedIn = authenticate(tokens);
 
@@ -50,7 +52,7 @@ export function voteRoutes({ pool, tokens }: VoteRouteDeps): Router {
 
     // election must be open
     const election = await pool.query('SELECT opens_at FROM election WHERE id = 1');
-    if (election.rows.length == 0 || new Date() < new Date(election.rows[0].opens_at)) {
+    if (election.rows.length == 0 || clock.now() < new Date(election.rows[0].opens_at)) {
       return res.status(409).json({ error: 'election is not open' });
     }
 
@@ -62,7 +64,7 @@ export function voteRoutes({ pool, tokens }: VoteRouteDeps): Router {
       return res.status(403).json({ error: 'candidate is not in your district' });
     }
 
-    const now = new Date();
+    const now = clock.now();
     const existing = await pool.query('SELECT candidate_id FROM votes WHERE voter_id = $1', [user.userId]);
     if (existing.rows.length > 0) {
       await pool.query('UPDATE votes SET candidate_id = $2, updated_at = $3 WHERE voter_id = $1', [
