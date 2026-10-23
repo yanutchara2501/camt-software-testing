@@ -53,6 +53,11 @@ export function givenFor(pool: Pool, tokens: TokenService) {
       ]);
     },
 
+    /** A commissioner closed the poll of this district at `closedAt`. */
+    async pollClosed(districtId: string, closedAt: Date): Promise<void> {
+      await pool.query('UPDATE districts SET closed_at = $2 WHERE id = $1', [districtId, closedAt]);
+    },
+
     /** The election opens at `opensAt` (default: one hour ago, so voting is already possible). */
     async electionOpenedAt(opensAt: Date = new Date(Date.now() - 60 * 60 * 1000)): Promise<void> {
       await pool.query(

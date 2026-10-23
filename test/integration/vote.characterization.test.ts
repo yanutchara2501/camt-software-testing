@@ -158,6 +158,50 @@ describe('vote routes: characterization', () => {
       expect(response.body).toEqual({ error: 'candidate is not in your district' });
     });
 
+    describe('after the commissioner closed the poll of the voter district (NEW requirement)', () => {
+      beforeEach(async () => {
+        await given.pollClosed('CM-1', new Date('2026-10-04T09:30:00.000Z'));
+      });
+
+      it('answers 409 "poll is closed" to a first vote', async () => {
+        const voter = await given.user(aVoter().inDistrict('CM-1'));
+
+        const response = await request(app)
+          .put('/me/vote')
+          .set('Authorization', `Bearer ${voter.token}`)
+          .send({ candidateId: first.id });
+
+        expect(response.status).toBe(409);
+        expect(response.body).toEqual({ error: 'poll is closed' });
+      });
+
+      it('answers 409 "poll is closed" when the voter tries to change an earlier vote, and keeps the old vote', async () => {
+        const voter = await given.user(aVoter().inDistrict('CM-1'));
+        await given.vote(voter.user, first);
+
+        const response = await request(app)
+          .put('/me/vote')
+          .set('Authorization', `Bearer ${voter.token}`)
+          .send({ candidateId: second.id });
+
+        const rows = await pool.query('SELECT candidate_id FROM votes WHERE voter_id = $1', [voter.user.id]);
+        expect(response.status).toBe(409);
+        expect(rows.rows).toEqual([{ candidate_id: first.id }]);
+      });
+
+      it('does not stop voters of another district', async () => {
+        const other = await given.candidate(aCandidate().inDistrict('CM-2').forParty((await given.party()).id));
+        const voter = await given.user(aVoter().inDistrict('CM-2'));
+
+        const response = await request(app)
+          .put('/me/vote')
+          .set('Authorization', `Bearer ${voter.token}`)
+          .send({ candidateId: other.id });
+
+        expect(response.status).toBe(201);
+      });
+    });
+
     describe('strange inputs', () => {
       it('WEIRD: candidateId 0 is treated as "missing" (400), because the code checks for a falsy value', async () => {
         const voter = await given.user(aVoter().inDistrict('CM-1'));

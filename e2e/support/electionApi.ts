@@ -81,6 +81,15 @@ export class ElectionApi {
     expect([200, 201], 'vote accepted').toContain(response.status());
   }
 
+  /** Like voteFor, but returns the HTTP status instead of asserting success. */
+  async tryVoteFor(voter: Session, number: number): Promise<number> {
+    const list = await this.request.get('/me/candidates', { headers: this.auth(voter) });
+    const candidates: { id: number; number: number }[] = await list.json();
+    const chosen = candidates.find((c) => c.number === number);
+    const response = await this.request.put('/me/vote', { headers: this.auth(voter), data: { candidateId: chosen!.id } });
+    return response.status();
+  }
+
   closePoll(commissioner: Session, districtId: string) {
     return this.request.post(`/districts/${districtId}/close`, { headers: this.auth(commissioner) });
   }

@@ -5,6 +5,7 @@ import { Pool } from 'pg';
 import { authenticate, principalOf } from '../auth/middleware';
 import { TokenService } from '../auth/tokenService';
 import { Clock } from '../clock';
+import { whyBallotIsClosed } from '../domain/ballotRules';
 
 export interface VoteRouteDeps {
   pool: Pool;
@@ -50,10 +51,16 @@ export function voteRoutes({ pool, tokens, clock }: VoteRouteDeps): Router {
       return res.status(400).json({ error: 'candidateId is required' });
     }
 
-    // election must be open
+    // voting must be allowed: the rules live in domain/ballotRules.ts (sprouted out of this handler)
     const election = await pool.query('SELECT opens_at FROM election WHERE id = 1');
-    if (election.rows.length == 0 || clock.now() < new Date(election.rows[0].opens_at)) {
-      return res.status(409).json({ error: 'election is not open' });
+    const district = await pool.query('SELECT closed_at FROM districts WHERE id = $1', [user.districtId]);
+    const closedReason = whyBallotIsClosed({
+      now: clock.now(),
+      electionOpensAt: election.rows.length == 0 ? null : new Date(election.rows[0].opens_at),
+      districtClosedAt: district.rows[0]?.closed_at ?? null,
+    });
+    if (closedReason) {
+      return res.status(409).json({ error: closedReason });
     }
 
     const cand = await pool.query('SELECT id, district_id FROM candidates WHERE id = $1', [candidateId]);

@@ -19,10 +19,12 @@ test('after the commissioner closes the poll, everybody sees the score of each c
   const before = await (await api.results('CM-3')).json();
   const closing = await api.closePoll(commissioner, 'CM-3');
   const after = await (await api.results('CM-3')).json();
+  const lateVote = await api.tryVoteFor(voters[0], 2);
 
   expect(before.closed).toBe(false);
   expect(before.candidates.every((c: object) => !('votes' in c))).toBe(true);
   expect(closing.status()).toBe(200);
+  expect(lateVote).toBe(409); // stretch: nobody can change a vote after the poll is closed
   expect(after.closed).toBe(true);
   expect(after.closedAt).toEqual(expect.any(String));
   expect(after.candidates.map((c: { number: number; votes: number }) => [c.number, c.votes])).toEqual([
