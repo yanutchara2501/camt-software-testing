@@ -6,6 +6,7 @@ import { CandidateRepository, NewCandidate } from '../../src/repositories/candid
 import { DistrictRepository } from '../../src/repositories/districtRepository';
 import { NewParty, PartyRepository } from '../../src/repositories/partyRepository';
 import { NewUser, UserRepository } from '../../src/repositories/userRepository';
+import { VoteRepository } from '../../src/repositories/voteRepository';
 
 export class InMemoryUserRepository implements UserRepository {
   readonly users: User[] = [];
@@ -34,7 +35,19 @@ export class InMemoryUserRepository implements UserRepository {
 }
 
 export class InMemoryDistrictRepository implements DistrictRepository {
+  private readonly closedAtById = new Map<string, Date>();
+
   constructor(private readonly districts: District[] = []) {}
+
+  async closedAt(id: string): Promise<Date | null> {
+    return this.closedAtById.get(id) ?? null;
+  }
+
+  async close(id: string, at: Date): Promise<boolean> {
+    if (this.closedAtById.has(id)) return false; // same rule as the real UPDATE ... WHERE closed_at IS NULL
+    this.closedAtById.set(id, at);
+    return true;
+  }
 
   async findAll(): Promise<District[]> {
     return [...this.districts].sort((a, b) => a.province.localeCompare(b.province) || a.number - b.number);
@@ -90,5 +103,25 @@ export class InMemoryCandidateRepository implements CandidateRepository {
     const created: Candidate = { ...candidate, id: this.nextId++, partyName: party?.name ?? '' };
     this.candidates.push(created);
     return created;
+  }
+}
+
+export class InMemoryVoteRepository implements VoteRepository {
+  private readonly votes = new Map<number, number>(); // voterId -> candidateId
+
+  // needs the candidates because the real SQL only counts votes for candidates of the asked district
+  constructor(private readonly candidates: CandidateRepository) {}
+
+  cast(voterId: number, candidateId: number): void {
+    this.votes.set(voterId, candidateId);
+  }
+
+  async countByCandidate(districtId: string): Promise<Map<number, number>> {
+    const inDistrict = new Set((await this.candidates.findByDistrict(districtId)).map((c) => c.id));
+    const tally = new Map<number, number>();
+    for (const candidateId of this.votes.values()) {
+      if (inDistrict.has(candidateId)) tally.set(candidateId, (tally.get(candidateId) ?? 0) + 1);
+    }
+    return tally;
   }
 }

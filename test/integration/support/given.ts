@@ -45,6 +45,14 @@ export function givenFor(pool: Pool, tokens: TokenService) {
       return candidates.create(builder.build());
     },
 
+    /** Puts a vote straight into the table (the vote route itself is legacy code and is not used here). */
+    async vote(voter: User, candidate: Candidate): Promise<void> {
+      await pool.query('INSERT INTO votes (voter_id, candidate_id, updated_at) VALUES ($1, $2, now())', [
+        voter.id,
+        candidate.id,
+      ]);
+    },
+
     /** The election opens at `opensAt` (default: one hour ago, so voting is already possible). */
     async electionOpenedAt(opensAt: Date = new Date(Date.now() - 60 * 60 * 1000)): Promise<void> {
       await pool.query(
