@@ -138,6 +138,8 @@ Use `git log --oneline --graph --all` to see the history.
 | `election/original` | 2.2: the code **before** V&V (first commit, untouched) | [code-comparison.md](docs/election-app/code-comparison.md) |
 | `election/unit-tests` | 2.1 + 2.3: unit test design and unit test suite | [unit-test-design.md](docs/election-app/unit-test-design.md) |
 | `election/vv-improved` | 2.2: the code **after** V&V, with tests | [code-comparison.md](docs/election-app/code-comparison.md) |
+| `chaojakk/original` | 2.2 on my own project ChaoJakk: login + 2FA code **before** V&V (one file, copied from the ChaoJakk repository) | [vv-unit-test-design.md](own-project/chaojakk/vv-unit-test-design.md) |
+| `chaojakk/improved` | 2.2 on ChaoJakk: the same file **after** V&V (three fixes). `git diff chaojakk/original chaojakk/improved` shows the change | [vv-unit-test-design.md](own-project/chaojakk/vv-unit-test-design.md) |
 
 Commit messages start with the step (`Step 06: ...`). Inside a step the order of the commits tells the story: for example in step 06
 the acceptance test is committed **red** first, then the component and unit tests, then the implementation that turns everything green.

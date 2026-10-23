@@ -7,6 +7,8 @@ Branch ที่ใช้ (ใน repo ChaoJakk):
 | `vv-original` | โค้ดเดิมก่อนทำ V&V (คือ `origin/main` ที่ commit `8da4494d` ไม่ได้แก้อะไรเลย) |
 | `vv-improved` | โค้ดหลังทำ V&V พร้อม unit test (ต่อจาก branch `testing-workshop` ของ Lab 08) |
 
+**สำเนาใน repo การบ้านนี้:** เพื่อให้อาจารย์เห็นการเทียบโค้ดโดยไม่ต้องเข้า repo ChaoJakk เราสร้าง branch `chaojakk/original` และ `chaojakk/improved` ใน repo นี้ ทั้งสอง branch มีไฟล์ซอร์สที่เกี่ยวข้องไฟล์เดียวคือ `own-project/chaojakk/code/auth.service.ts` (เวอร์ชันเดิมกับเวอร์ชันหลังแก้) รัน `git diff chaojakk/original chaojakk/improved` เพื่อดูส่วนต่าง
+
 ไฟล์ test อยู่ที่ `platform/api/tests/unit/authLogin.test.ts` โค้ดที่ทดสอบคือ `platform/api/src/modules/auth/auth.service.ts` (ฟังก์ชัน `login` และ `redeemTwoFactorChallenge`)
 
 ## ทำไมเลือกฟีเจอร์นี้
