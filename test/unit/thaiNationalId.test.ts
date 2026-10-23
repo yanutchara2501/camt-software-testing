@@ -1,19 +1,38 @@
 import { isValidThaiNationalId } from '../../src/domain/thaiNationalId';
 
 describe('isValidThaiNationalId', () => {
-  it('accepts an id whose last digit matches the checksum', () => {
-    const id = '1509900000017';
+  describe('when the id is well formed', () => {
+    it.each(['1509900000017', '1100000000016', '1100000000024'])('accepts "%s" because the checksum digit matches', (id) => {
+      // Arrange: id comes from the table above
 
-    const valid = isValidThaiNationalId(id);
+      // Act
+      const valid = isValidThaiNationalId(id);
 
-    expect(valid).toBe(true);
+      // Assert
+      expect(valid).toBe(true);
+    });
+
+    it('rejects an id whose checksum digit is wrong', () => {
+      const id = '1509900000018'; // same as a valid id but the last digit is off by one
+
+      const valid = isValidThaiNationalId(id);
+
+      expect(valid).toBe(false);
+    });
   });
 
-  it('rejects an id with a wrong checksum digit', () => {
-    expect(isValidThaiNationalId('1509900000018')).toBe(false);
-  });
+  describe('when the id is malformed', () => {
+    it.each([
+      ['an empty string', ''],
+      ['12 digits (too short)', '150990000001'],
+      ['14 digits (too long)', '15099000000170'],
+      ['letters instead of digits', 'abcdefghijklm'],
+      ['a letter at the end', '150990000001x'],
+      ['spaces inside', '1 50990000001 7'],
+    ])('rejects %s', (_label, id) => {
+      const valid = isValidThaiNationalId(id);
 
-  it.each(['', '150990000001', '15099000000170', '150990000001x'])('rejects malformed id "%s"', (id) => {
-    expect(isValidThaiNationalId(id)).toBe(false);
+      expect(valid).toBe(false);
+    });
   });
 });
