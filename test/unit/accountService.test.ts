@@ -34,6 +34,8 @@ function stubDistricts(known: boolean): DistrictRepository {
   return {
     findAll: jest.fn(),
     findById: jest.fn().mockResolvedValue(known ? cm1 : null),
+    closedAt: jest.fn(),
+    close: jest.fn(),
   };
 }
 

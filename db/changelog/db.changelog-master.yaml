@@ -23,6 +23,11 @@ databaseChangeLog:
         - tagDatabase:
             tag: day1
 
+  # Schema change after the day1 tag, before the seed files (a file that is not listed here never runs).
+  - include:
+      file: changes/005-district-poll-closing.sql
+      relativeToChangelogFile: true
+
   - include:
       file: changes/900-dev-seed.sql
       relativeToChangelogFile: true

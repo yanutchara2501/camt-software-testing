@@ -102,8 +102,7 @@ describe('PollService.resultsFor', () => {
 
     const results = await service.resultsFor('CM-3');
 
-    expect(results.closed).toBe(true);
-    expect(results.closedAt).toEqual(closingTime);
+    expect(results).toMatchObject({ closed: true, closedAt: closingTime });
     expect(results.candidates.map((c) => [c.number, c.votes])).toEqual([
       [1, 2],
       [2, 1],

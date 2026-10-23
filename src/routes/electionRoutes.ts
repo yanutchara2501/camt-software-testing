@@ -6,16 +6,18 @@ import { CandidateRepository } from '../repositories/candidateRepository';
 import { DistrictRepository } from '../repositories/districtRepository';
 import { PartyRepository } from '../repositories/partyRepository';
 import { ElectionAdminService } from '../services/electionAdminService';
+import { PollService } from '../services/pollService';
 
 interface ElectionRouteDeps {
   admin: ElectionAdminService;
+  poll: PollService;
   districts: DistrictRepository;
   parties: PartyRepository;
   candidates: CandidateRepository;
   tokens: TokenService;
 }
 
-export function electionRoutes({ admin, districts, parties, candidates, tokens }: ElectionRouteDeps): Router {
+export function electionRoutes({ admin, poll, districts, parties, candidates, tokens }: ElectionRouteDeps): Router {
   const router = Router();
   const commissionerOnly = [authenticate(tokens), requireRole('COMMISSIONER')];
 
@@ -41,22 +43,13 @@ export function electionRoutes({ admin, districts, parties, candidates, tokens }
     res.status(201).json(await admin.addCandidate(req.params.id as string, req.body ?? {}));
   });
 
-  // Public results. Scores stay hidden: nobody can close a district's poll yet.
-  router.get('/districts/:id/results', async (req, res) => {
-    const district = await districts.findById(req.params.id as string);
-    if (!district) throw new NotFoundError('district not found');
+  router.post('/districts/:id/close', ...commissionerOnly, async (req, res) => {
+    res.json(await poll.close(req.params.id as string));
+  });
 
-    const list = await candidates.findByDistrict(district.id);
-    res.json({
-      district,
-      closed: false,
-      candidates: list.map((c) => ({
-        number: c.number,
-        firstName: c.firstName,
-        lastName: c.lastName,
-        partyName: c.partyName,
-      })),
-    });
+  // Public results. The service decides what may be shown: scores stay hidden until the poll is closed.
+  router.get('/districts/:id/results', async (req, res) => {
+    res.json(await poll.resultsFor(req.params.id as string));
   });
 
   return router;
