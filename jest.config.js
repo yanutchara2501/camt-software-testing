@@ -10,6 +10,13 @@ const tsJest = {
 
 /** @type {import('jest').Config} */
 module.exports = {
+  // Coverage gate only where unit tests are the right tool (business rules). Routes and repositories are
+  // covered by component / integration tests, so a unit-test threshold on them would only force bad tests.
+  collectCoverageFrom: ['src/**/*.ts', '!src/server.ts'],
+  coverageThreshold: {
+    './src/domain/': { statements: 100, branches: 100, functions: 100, lines: 100 },
+    './src/services/': { statements: 90, branches: 90, functions: 100, lines: 90 },
+  },
   projects: [
     {
       displayName: 'unit',

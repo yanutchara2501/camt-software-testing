@@ -18,6 +18,8 @@
     "db:reset:test": "docker compose up -d --force-recreate --wait db-test",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "jest --selectProjects unit",
+    "test:coverage": "jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=html",
+    "db:test-rollback": "npm run db:reset:test && docker compose run --rm --build liquibase update-testing-rollback",
     "test:integration": "npm run db:up:test && npm run db:migrate:test && jest --selectProjects integration --runInBand",
     "db:up:e2e": "docker compose up -d --force-recreate --wait db-e2e",
     "db:migrate:e2e": "docker compose run --rm --build -e LIQUIBASE_COMMAND_URL=jdbc:postgresql://db-e2e:5432/election_e2e -e LIQUIBASE_COMMAND_CONTEXTS=e2e liquibase update",

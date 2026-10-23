@@ -1,0 +1,64 @@
+# The pipeline only presses the buttons. Every step is an npm script that I can also run on my laptop,
+# so "green locally" and "green in CI" mean the same thing.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Cheapest and fastest first (fail fast): no Docker, no database.
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Unit tests with the coverage gate
+        run: npm run test:coverage
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+  # Component + integration tests need a real Postgres. The database is created for this job
+  # (docker compose on the runner) and disappears with the runner.
+  integration:
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Check that every migration can be rolled back
+        run: npm run db:test-rollback
+      - name: Component and integration tests
+        run: npm run test:integration
+
+  # Slowest and most expensive: the whole system as a container, tested over HTTP.
+  e2e:
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:e2e
+      - name: Keep the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
