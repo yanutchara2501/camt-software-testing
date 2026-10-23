@@ -12,8 +12,9 @@ git diff election/original election/vv-improved --stat -- src db
 git diff election/original election/vv-improved -- src/routes/voteRoutes.ts
 ```
 
-> Note on the baseline: `election/original` is the code that this assignment started from (the reference election backend). If the Backend course
-> submission has to be the baseline, put that code on the `election/original` branch and re-run the same comparison; the method below does not change.
+> Note on the baseline: `election/original` is the election backend from the `main` branch of the `camt-software-testing` workshop repository
+> (its `src/` and `db/` are identical to commit `7c784ec`). That repository describes it as the election course project rebuilt small.
+> It is the code this assignment started from, and I did not change it.
 
 ## V&V in one paragraph
 
