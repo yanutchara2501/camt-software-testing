@@ -1,5 +1,7 @@
 # Testing workshop - applying it to ChaoJakk (Lab 08)
 
+Short Thai summary of everything in this folder (Lab 08 and part 2): [report/summary-chaojakk.pdf](report/summary-chaojakk.pdf).
+
 Branch: `testing-workshop` (cut from `origin/main`, made with `new-worktree.ps1`).
 The branch only **adds** files: four test files and this note. No source file was changed.
 

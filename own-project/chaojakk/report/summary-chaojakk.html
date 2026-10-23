@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สรุปผลการทดสอบซอฟต์แวร์โปรเจกต์ ChaoJakk</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Leelawadee UI", Tahoma, sans-serif;
+    font-size: 11pt; line-height: 1.55; color: #1f2933;
+  }
+  h1 { font-size: 20pt; margin: 0 0 4pt; color: #9a3412; line-height: 1.25; }
+  h2 { font-size: 14pt; margin: 20pt 0 6pt; padding-bottom: 3pt; border-bottom: 2px solid #f59e0b; color: #7c2d12; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 12pt 0 4pt; color: #1f2933; page-break-after: avoid; }
+  p { margin: 4pt 0 6pt; }
+  ul, ol { margin: 4pt 0 8pt; padding-left: 18pt; }
+  li { margin: 2pt 0; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #f3f4f6; padding: 0 3pt; border-radius: 3pt; }
+  .sub { color: #52606d; margin: 0 0 10pt; }
+  .meta { border: 1px solid #d9dee3; background: #fafaf9; padding: 8pt 10pt; border-radius: 4pt; font-size: 10pt; margin: 8pt 0 6pt; }
+  .meta div { margin: 1pt 0; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.8pt; }
+  th, td { border: 1px solid #cfd6dd; padding: 4pt 6pt; vertical-align: top; text-align: left; }
+  th { background: #fef3c7; font-weight: bold; }
+  tr { page-break-inside: avoid; }
+  .num { text-align: center; white-space: nowrap; }
+  .note { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 6pt 10pt; margin: 8pt 0; font-size: 10.3pt; }
+  .warn { border-left: 4px solid #b91c1c; background: #fef2f2; padding: 6pt 10pt; margin: 8pt 0; font-size: 10.3pt; }
+  .foot { margin-top: 18pt; font-size: 9pt; color: #6b7280; border-top: 1px solid #d9dee3; padding-top: 6pt; }
+</style>
+</head>
+<body>
+
+<h1>สรุปผลการทดสอบซอฟต์แวร์ของโปรเจกต์ ChaoJakk</h1>
+<p class="sub">Lab 08 (นำเครื่องมือไปใช้กับโปรเจกต์ของตัวเอง) และข้อ 2 (ออกแบบ unit test, เทียบโค้ดด้วย V&amp;V, เขียน stub / spy / mock / Faker)</p>
+
+<div class="meta">
+  <div><b>รายวิชา</b> Software Testing (CAMT)</div>
+  <div><b>GitHub</b> yanutchara2501 &nbsp;|&nbsp; repo การบ้าน <code>camt-software-testing</code> (โฟลเดอร์ <code>own-project/chaojakk/</code>)</div>
+  <div><b>โปรเจกต์ที่ทดสอบ</b> ChaoJakk (เช่าจักร) ตลาดเช่าเครื่องจักรก่อสร้างพร้อมคนขับ</div>
+</div>
+
+<h2>1. ภาพรวม</h2>
+<p>ChaoJakk ฝั่ง backend เขียนด้วย Node 24, Express 5, Prisma และ PostgreSQL ส่วน frontend ใช้ Vue 3 กับ TypeScript โปรเจกต์ทดสอบด้วย Vitest และ Supertest อยู่แล้ว (ฝั่ง backend มีไฟล์ test 223 ไฟล์ ก่อนเริ่มงานนี้)
+เราจึงไม่ได้สร้างระบบทดสอบใหม่ แต่ใช้แนวคิดจาก workshop ตรวจหาช่องว่าง เติม test และหาจุดอ่อนของโค้ดที่ยังไม่มีใครตรวจ</p>
+
+<p>งานทั้งหมดทำใน <code>git worktree</code> แยก เพื่อไม่ให้ไปแตะงานที่ยังไม่ได้ commit บน <code>main</code> ของโปรเจกต์ โดยมี branch ดังนี้</p>
+<table>
+  <tr><th>Branch</th><th>ใช้ทำอะไร</th></tr>
+  <tr><td><code>testing-workshop</code></td><td>Lab 08: test ใหม่ 4 ไฟล์ และเอกสาร</td></tr>
+  <tr><td><code>vv-original</code></td><td>โค้ดเดิมก่อนทำ V&amp;V (คือ <code>origin/main</code> ที่ commit <code>8da4494d</code> ไม่ได้แก้อะไร)</td></tr>
+  <tr><td><code>vv-improved</code></td><td>โค้ดหลังทำ V&amp;V พร้อม unit test ของฟีเจอร์ล็อกอินและ 2FA</td></tr>
+</table>
+
+<table>
+  <tr><th>ผลลัพธ์โดยย่อ</th><th class="num">จำนวน</th></tr>
+  <tr><td>ไฟล์ test ใหม่ / จำนวน test ใหม่ (ผ่านทั้งหมด)</td><td class="num">5 ไฟล์ / 79 test</td></tr>
+  <tr><td>ช่องโหว่ในโค้ดเดิมที่หาเจอและแก้พร้อมหลักฐาน</td><td class="num">3 จุด</td></tr>
+  <tr><td>ไฟล์ซอร์สที่แก้</td><td class="num">1 ไฟล์ (เพิ่ม 32 ลบ 5 บรรทัด)</td></tr>
+  <tr><td>คะแนน Readiness checklist (เต็ม 24)</td><td class="num">17 เป็น 18</td></tr>
+</table>
+
+<h2>2. Lab 08 &ndash; นำไปใช้กับโปรเจกต์ของตัวเอง</h2>
+
+<h3>ขั้นที่ 1: ระบบทดสอบที่มีอยู่แล้ว (harness)</h3>
+<table>
+  <tr><th>สิ่งที่ต้องมี</th><th>มีอยู่ที่ไหน</th></tr>
+  <tr><td>แยก unit test กับ component test</td><td><code>platform/api/tests/unit</code> (88 ไฟล์) และ <code>tests/feature</code> (135 ไฟล์)</td></tr>
+  <tr><td>ฐานข้อมูลจริงสำหรับ component test สร้างจาก migration</td><td><code>tests/globalSetup.ts</code> รัน <code>prisma migrate deploy</code> บน <code>TEST_DATABASE_URL</code> และปฏิเสธการรันถ้าไม่ตั้งค่า (กันไปชนฐานข้อมูลจริง)</td></tr>
+  <tr><td>ล้างข้อมูลระหว่างไฟล์ test</td><td><code>tests/helpers/database.ts</code> และ <code>fileParallelism: false</code></td></tr>
+  <tr><td>แอปที่สร้างโดยไม่ต้อง <code>listen()</code></td><td><code>createApp()</code> ใช้คู่กับ supertest</td></tr>
+  <tr><td>สร้างข้อมูลทดสอบ</td><td><code>tests/helpers/factories.ts</code></td></tr>
+  <tr><td>CI</td><td><code>.github/workflows/ci.yml</code> มี Postgres service รัน typecheck, test และ build</td></tr>
+</table>
+
+<h3>ขั้นที่ 2: Characterize ก่อนแก้ (จดว่าโค้ดทำอะไรอยู่จริง)</h3>
+<p>endpoint สำคัญอย่างการจองและการชำระเงินมี feature test ครอบคลุมอยู่แล้ว เราจึงเลือกสิ่งที่ <b>ทุก route ที่มี <code>:id</code> ใช้ร่วมกัน</b> แต่ยังไม่มี test ตรง ๆ คือ <code>parseId</code> (<code>src/lib/params.ts</code>)
+ไฟล์ <code>tests/unit/params.test.ts</code> บันทึกพฤติกรรมตามที่เป็นจริง ส่วนที่แปลกติดป้าย <code>WEIRD</code> และยังไม่แก้</p>
+<table>
+  <tr><th>ค่าที่ใส่</th><th>ผลปัจจุบัน</th></tr>
+  <tr><td><code>"42"</code>, <code>42</code></td><td>ได้ <code>42n</code></td></tr>
+  <tr><td><code>0</code>, <code>-1</code>, <code>1.5</code>, <code>"abc"</code>, ค่าว่าง, <code>null</code>, <code>undefined</code>, <code>NaN</code>, <code>"Infinity"</code></td><td>ตอบ 404 &quot;ไม่พบข้อมูล&quot;</td></tr>
+  <tr><td>WEIRD <code>"1e3"</code></td><td>ถูกรับเป็น <code>1000n</code></td></tr>
+  <tr><td>WEIRD <code>"0x10"</code></td><td>ถูกรับเป็น <code>16n</code></td></tr>
+  <tr><td>WEIRD <code>" 7 "</code> (มีช่องว่าง)</td><td>ถูกรับเป็น <code>7n</code></td></tr>
+  <tr><td>WEIRD <code>"9007199254740993"</code></td><td>กลายเป็น <code>9007199254740992n</code> (เลขเกิน 2<sup>53</sup> เพี้ยนไปเป็นเลขข้างเคียง)</td></tr>
+</table>
+<p>ข้อสุดท้ายสำคัญที่สุด เพราะคอมเมนต์ในโค้ดสัญญาว่า id ที่ผิดรูปแบบต้องดูเหมือน id ที่ไม่มีอยู่ แต่เลขใหญ่กลับกลายเป็น id อื่นแทน</p>
+
+<h3>ขั้นที่ 3: test ใหม่</h3>
+<table>
+  <tr><th>ไฟล์</th><th>ระดับ</th><th class="num">test</th><th>ตรวจอะไร</th></tr>
+  <tr><td><code>unit/totp.test.ts</code></td><td>Unit</td><td class="num">20</td><td>รหัส 2FA กับนาฬิกาที่หยุดไว้: รหัสปัจจุบัน, เร็ว/ช้าไป 1 ช่วง รับ, เกิน 2 ช่วง ปฏิเสธ, ช่องว่างในรหัส, รหัสหรือ secret ผิดรูปแบบต้องคืน <code>false</code> ไม่ throw; รหัสกู้คืน 8 รหัส รูปแบบ <code>XXXXX-XXXXX</code> ไม่มีตัวอักษรที่หน้าตาคล้ายกัน ไม่ซ้ำ</td></tr>
+  <tr><td><code>unit/geo.test.ts</code></td><td>Unit</td><td class="num">9</td><td>ระยะทาง Haversine เทียบกับค่าที่คำนวณจากสูตรเอง (1 องศา = 111,195 ม.), สมมาตร, ขั้วโลกตรงข้าม, กรุงเทพ&ndash;เชียงใหม่ประมาณ 580 กม.</td></tr>
+  <tr><td><code>unit/params.test.ts</code></td><td>Unit (characterization)</td><td class="num">17</td><td>ตามตารางในขั้นที่ 2</td></tr>
+  <tr><td><code>feature/listingIdParam.test.ts</code></td><td>Component (supertest + PostgreSQL)</td><td class="num">5</td><td><code>GET /api/v1/listings/:id</code> ใส่ <code>abc</code>, <code>0</code>, <code>-5</code>, <code>1.5</code> ต้องได้สถานะและเนื้อหาตอบเหมือน id ที่ไม่มีอยู่</td></tr>
+</table>
+<p>เราพิสูจน์ว่า test แดงได้จริงโดยแก้ซอร์สชั่วคราวแล้วคืนค่า: เปลี่ยน <code>window: 1</code> เป็น <code>0</code> ใน <code>totp.ts</code> ทำให้ test แดง 2 ข้อ และเปลี่ยนรัศมีโลกใน <code>geo.ts</code> ทำให้ test แดง 4 ข้อ</p>
+
+<h3>ขั้นที่ 4: Readiness checklist (0 = ไม่มี, 1 = มีบางส่วน, 2 = ครบและอัตโนมัติ)</h3>
+<table>
+  <tr><th class="num">#</th><th>หัวข้อ</th><th class="num">รอบ 1</th><th class="num">รอบ 2</th><th>หลักฐาน</th></tr>
+  <tr><td class="num">1</td><td>ระบุ test boundary ชัดเจน</td><td class="num">1</td><td class="num">2</td><td>มีโฟลเดอร์แยกอยู่แล้วแต่ยังไม่มีเอกสารอธิบาย เอกสารนี้คือส่วนที่ขาด</td></tr>
+  <tr><td class="num">2</td><td>แยก test ที่ไม่ใช้ I/O ออกจากที่ใช้ DB</td><td class="num">1</td><td class="num">1</td><td>แยกโฟลเดอร์แล้ว แต่ <code>globalSetup</code> ทำงานกับทุก test จึงต้องรอฐานข้อมูลแม้เป็น unit test</td></tr>
+  <tr><td class="num">3</td><td>รันทั้งหมดด้วยคำสั่งเดียว</td><td class="num">1</td><td class="num">1</td><td><code>npm test</code> แยกกันระหว่าง api กับ frontend และต้องมี <code>.env</code> กับ Postgres</td></tr>
+  <tr><td class="num">4</td><td>ฐานข้อมูล test สร้างจาก migration</td><td class="num">2</td><td class="num">2</td><td><code>globalSetup.ts</code></td></tr>
+  <tr><td class="num">5</td><td>ไม่มีขั้นตอน DB ที่ต้องทำด้วยมือ</td><td class="num">1</td><td class="num">1</td><td>Postgres ตอนพัฒนามาจาก compose file นอก repo</td></tr>
+  <tr><td class="num">6</td><td>เหมือนกันทั้งในเครื่องและ CI</td><td class="num">2</td><td class="num">2</td><td><code>ci.yml</code> เรียก npm script ชุดเดียวกัน</td></tr>
+  <tr><td class="num">7</td><td>ใช้ builder / factory สร้างข้อมูล</td><td class="num">2</td><td class="num">2</td><td><code>tests/helpers/factories.ts</code></td></tr>
+  <tr><td class="num">8</td><td>test ไม่พึ่งกัน</td><td class="num">2</td><td class="num">2</td><td>ล้างข้อมูลระหว่างไฟล์ และรันทีละไฟล์ (ยังไม่ได้ลองสุ่มลำดับ)</td></tr>
+  <tr><td class="num">9</td><td>ควบคุมเวลาและค่าสุ่มได้</td><td class="num">1</td><td class="num">1</td><td>ใช้ fake timers ใน 5 ไฟล์เท่านั้น และไม่มีตัวสร้างข้อมูลสุ่มแบบ seed คงที่</td></tr>
+  <tr><td class="num">10</td><td>dependency สำคัญ inject ได้</td><td class="num">1</td><td class="num">1</td><td><code>createApp()</code> เป็นจุดแทนที่ได้ แต่ Prisma เป็น singleton จึงเปลี่ยนฐานข้อมูลไม่ได้</td></tr>
+  <tr><td class="num">11</td><td>ใช้ test double ถูกระดับ</td><td class="num">2</td><td class="num">2</td><td><code>vi.mock</code> 11 ไฟล์ และ <code>vi.spyOn</code> 4 ไฟล์ จาก 223 ฐานข้อมูลเป็นของจริง</td></tr>
+  <tr><td class="num">12</td><td>ส่วนเสี่ยงที่สุดมี characterization test</td><td class="num">1</td><td class="num">1</td><td>ยังไม่มีแบบชัดเจน <code>parseId</code> เป็นชิ้นแรก (เล็ก)</td></tr>
+  <tr><th></th><th>รวม (เต็ม 24)</th><th class="num">17</th><th class="num">18</th><th>คะแนนขยับน้อยเพราะโปรเจกต์มี test ดีอยู่แล้ว ค่าของงานนี้อยู่ที่สิ่งที่ค้นพบด้านล่าง</th></tr>
+</table>
+
+<h3>สิ่งที่พบและข้อเสนอต่อ</h3>
+<ol>
+  <li><b><code>npm run typecheck</code> ล้มอยู่แล้วบน <code>origin/main</code></b> ที่ <code>tests/unit/labelParts.test.ts</code> บรรทัด 159&ndash;160 อ่าน <code>hoursCharged</code> ซึ่งไม่มีใน <code>RefundBreakdown</code> CI รัน typecheck ก่อน test จึงน่าจะแดง (เราไม่ได้แก้ไฟล์นี้)</li>
+  <li><b>unit test ต้องรอฐานข้อมูล</b> เสนอแยก <code>vitest.config.ts</code> เป็น 2 project (unit ไม่ใช้ <code>globalSetup</code>) จะได้รัน unit ได้ในไม่กี่วินาทีโดยไม่ต้องเปิด Docker</li>
+  <li><b><code>parseId</code> รับ <code>"1e3"</code>, <code>"0x10"</code> และเลขเกิน 2<sup>53</sup> แล้วเพี้ยนเงียบ ๆ</b> เสนอให้เช็กด้วย <code>/^[1-9]\d*$/</code> และ <code>Number.isSafeInteger</code> แล้วแก้ test ที่ติดป้าย <code>WEIRD</code> พร้อมกัน</li>
+  <li><b>ยังไม่มีข้อมูลสุ่มแบบ seed คงที่</b> เสนอเพิ่ม Faker ใน factories</li>
+</ol>
+
+<h2>3. ข้อ 2.1 &ndash; ออกแบบ unit test (ฟีเจอร์ล็อกอินและ 2FA)</h2>
+<p><b>ทำไมเลือกฟีเจอร์นี้</b> เป็นด่านแรกของทุกบัญชี ถ้าพลาดคนอื่นอาจเข้าบัญชีแอดมินหรือผู้ให้เช่าได้ อีกทั้งมีตัวช่วย (collaborator) หลายตัวที่ต้องจำลอง
+คือฐานข้อมูล การตรวจรหัสผ่าน การออก token การบันทึก audit และการตรวจรหัส TOTP จึงใช้ stub, spy, mock ได้ครบ และมีทั้งทางสำเร็จและทางล้มเหลวหลายแบบ</p>
+<p>โค้ดที่ทดสอบคือ <code>platform/api/src/modules/auth/auth.service.ts</code> (ฟังก์ชัน <code>login</code> และ <code>redeemTwoFactorChallenge</code>) ไฟล์ test คือ <code>tests/unit/authLogin.test.ts</code> มี 28 test</p>
+
+<table>
+  <tr><th>หน่วย</th><th>หน้าที่</th><th>ตัวช่วยที่จำลอง</th></tr>
+  <tr><td><code>login</code></td><td>ตรวจรหัสผ่านและสถานะบัญชี แล้วออก token หรือออก challenge ถ้าเปิด 2FA</td><td>prisma (stub), <code>verifyPassword</code> (stub), <code>issueToken</code> (mock), <code>recordAudit</code> (spy)</td></tr>
+  <tr><td><code>redeemTwoFactorChallenge</code></td><td>แลก challenge พร้อมรหัส TOTP หรือ recovery code เป็น token</td><td>ตารางจำลองในหน่วยความจำ (fake), <code>verifyTotp</code> (stub), <code>issueToken</code> (mock)</td></tr>
+</table>
+
+<table>
+  <tr><th>เทคนิคออกเคส</th><th>ใช้ตรงไหน</th><th>ได้อะไร</th></tr>
+  <tr><td>Equivalence partitioning</td><td>ตัวระบุตัวตนที่ผู้ใช้พิมพ์: อีเมล, เบอร์ที่มีขีด, เลขบัตร 13 หลักที่มีขีด (UT-L9 ถึง L11)</td><td>เลือกตัวแทนต่อกลุ่ม เคสน้อยแต่ครอบคลุม</td></tr>
+  <tr><td>Boundary value analysis</td><td>อายุ challenge 5 นาที (UT-L14, UT-R4 ลองใช้หลังหมด 1 วินาที)</td><td>จับ bug ที่ตัวเลขอายุเพี้ยนได้</td></tr>
+  <tr><td>Decision table</td><td>ผลของ login ตามรหัสผ่าน / สถานะบัญชี / การเปิด 2FA</td><td>เห็นว่าชุดเงื่อนไขไหนยังไม่มีเคส</td></tr>
+  <tr><td>State transition</td><td>challenge: ใหม่ เป็น ใช้แล้ว หรือหมดอายุ (UT-R1 ถึง R6)</td><td>บังคับให้คิดว่า &quot;ใช้ซ้ำ&quot; ต้องเกิดอะไร</td></tr>
+  <tr><td>Error guessing</td><td>ข้อความเหมือนกันทั้งกรณีไม่มีผู้ใช้และรหัสผิด (L6), ตรวจรหัสผ่านแม้ไม่มีผู้ใช้เพื่อให้เวลาตอบเท่ากัน (L7), audit เก็บ hash ไม่เก็บอีเมลจริง (L5)</td><td>ล็อกกฎความปลอดภัยที่เดิมมีแต่คอมเมนต์ ไม่มี test</td></tr>
+  <tr><td>Concurrency test</td><td>สองคำขอพร้อมกัน (UT-R6, R7)</td><td>พิสูจน์ช่องโหว่แบบ race condition ที่ test ปกติมองไม่เห็น</td></tr>
+</table>
+
+<h2>4. ข้อ 2.2 &ndash; เทียบโค้ดเดิมกับโค้ดหลัง V&amp;V</h2>
+<p><b>Verification</b> ถามว่า &quot;เขียนถูกตามกฎของตัวเองไหม&quot; ส่วน <b>Validation</b> ถามว่า &quot;ตรงกับที่ผู้ใช้ต้องการไหม&quot; เราเทียบด้วยคำสั่ง
+<code>git diff vv-original vv-improved --stat -- platform/api/src</code> ซึ่งมีไฟล์ซอร์สที่เปลี่ยนเพียงไฟล์เดียวคือ <code>auth.service.ts</code></p>
+
+<h3>ส่วนที่ไม่เปลี่ยน</h3>
+<ul>
+  <li>ส่วนเช็กรหัสผ่าน เช็กสถานะบัญชี และออก challenge ใน <code>login</code> พฤติกรรมถูกต้องอยู่แล้ว (UT-L1 ถึง L16 ผ่านกับโค้ดเดิม) การเขียนใหม่มีแต่ความเสี่ยง</li>
+  <li><code>lib/totp.ts</code>, <code>lib/password.ts</code>, <code>lib/tokens.ts</code>, router และ schema ไม่พบปัญหา และมี test เดิมคุมอยู่</li>
+  <li>ข้อความ error ภาษาไทยทั้งหมด เพราะฝั่ง frontend อ่านข้อความนี้โดยตรง</li>
+</ul>
+
+<h3>ส่วนที่เปลี่ยน</h3>
+<table>
+  <tr><th class="num">#</th><th>สิ่งที่เปลี่ยน</th><th>V หรือ V</th><th>เหตุผล</th><th>หลักฐาน</th></tr>
+  <tr>
+    <td class="num">1</td>
+    <td><code>redeemTwoFactorChallenge</code> ใช้ challenge ด้วย <code>updateMany({ where: { id, consumedAt: null } })</code> แล้วตรวจว่าแก้ได้ 1 แถว</td>
+    <td>Verification</td>
+    <td>ของเดิมเช็ก <code>consumedAt</code> แล้วค่อย <code>update</code> เป็นคนละคำสั่ง ถ้าสองคำขอเข้าพร้อมกันจะผ่านทั้งคู่และได้ token สองใบ ทั้งที่ challenge ใช้ได้ครั้งเดียว</td>
+    <td>UT-R6 แดงกับโค้ดเดิม (ได้ 2 token) เขียวหลังแก้</td>
+  </tr>
+  <tr>
+    <td class="num">2</td>
+    <td><code>consumeRecoveryCode</code> เขียนกลับเฉพาะเมื่อค่าที่เก็บยังเป็นค่าที่เพิ่งอ่านมา (compare-and-swap)</td>
+    <td>Verification</td>
+    <td>ของเดิมอ่านรายการ ตัดรหัสออก แล้วเขียนกลับ ถ้าสองคำขอถือรหัสเดียวกันจะอ่านรายการเต็มทั้งคู่ ทำให้ recovery code ใช้ได้มากกว่า 1 ครั้ง</td>
+    <td>UT-R7 แดงกับโค้ดเดิม เขียวหลังแก้</td>
+  </tr>
+  <tr>
+    <td class="num">3</td>
+    <td>ตรวจ <code>user.status</code> ว่า active ก่อนออก token ในขั้น 2FA</td>
+    <td>Validation</td>
+    <td>ขั้นรหัสผ่านตรวจสถานะแล้ว แต่ challenge อยู่ได้ 5 นาที ถ้าแอดมินระงับบัญชีระหว่างนั้น ผู้ใช้ยังได้ token ซึ่งขัดกับความตั้งใจของการระงับบัญชี</td>
+    <td>UT-R8 แดงกับโค้ดเดิม เขียวหลังแก้</td>
+  </tr>
+</table>
+<p>ลำดับงานตามหลัก red-green: เขียน UT-R6 ถึง R8 ก่อนแล้วรันกับโค้ดเดิมให้เห็นว่าแดง (commit <code>14ffec83</code>) จึงค่อยแก้ซอร์ส (commit <code>4d0b8b55</code>) จนเขียว</p>
+
+<h2>5. ข้อ 2.3 &ndash; ตรวจตามโจทย์</h2>
+<table>
+  <tr><th>ข้อ</th><th>ทำที่</th></tr>
+  <tr><td>2.3.1 Happy path</td><td>UT-L1 (ลูกค้า active รหัสถูก ได้ session และ token), UT-L16, UT-R1</td></tr>
+  <tr><td>2.3.2 Alternative / failure</td><td>UT-L4 (รหัสผิด), UT-L6, UT-L7, UT-L8 (บัญชีถูกระงับ), UT-R2 ถึง R4</td></tr>
+  <tr><td>2.3.3 Stub</td><td><code>prismaMock.user.findFirst.mockResolvedValue(...)</code> และ <code>verifyPasswordMock.mockResolvedValue(...)</code> ใน UT-L1, L4, L9 ถึง L12</td></tr>
+  <tr><td>2.3.4 Spy</td><td><code>recordAudit</code> ใน UT-L3, L5, L8 (อ่านสิ่งที่ถูกบันทึกภายหลัง)</td></tr>
+  <tr><td>2.3.5 Mock</td><td><code>issueToken</code> ใน UT-L2 (ต้องถูกเรียก 1 ครั้งด้วย <code>(user.id, 'chaojakk-pwa', context, role)</code>) และ <code>not.toHaveBeenCalled()</code> ใน UT-L4, L13, R2, R8</td></tr>
+  <tr><td>2.3.6 Faker</td><td>UT-L16 (ลูกค้าสุ่ม 5 ชุด) และข้อมูลผู้ใช้ทุกแถวจาก <code>aUserRow()</code> ตั้ง seed คงที่ 20261005 เพื่อให้รันซ้ำได้ผลเดิม</td></tr>
+</table>
+
+<h2>6. สรุปเทคนิคที่ใช้: ใช้อะไร ทำไมเลือก ช่วยการเทสอย่างไร</h2>
+<table>
+  <tr><th>เทคนิค</th><th>ใช้ที่ไหน</th><th>เหตุผลที่เลือก</th><th>ประโยชน์ต่อการเทส</th></tr>
+  <tr><td>Stub</td><td>prisma, <code>verifyPassword</code></td><td>อยากทดสอบแค่ตรรกะล็อกอิน ไม่รอฐานข้อมูลจริงหรือ argon2 ที่ช้า</td><td>คุมข้อมูลขาเข้าได้เต็มที่ ทั้งไฟล์รันในไม่กี่สิบมิลลิวินาที</td></tr>
+  <tr><td>Spy</td><td><code>recordAudit</code></td><td>อยากรู้ว่าระบบบันทึกอะไรลง audit โดยไม่ขวางการทำงานจริง</td><td>ตรวจผลข้างเคียงที่ไม่ได้ return ได้ เช่น ไม่มีอีเมลจริงหลุดเข้า audit</td></tr>
+  <tr><td>Mock</td><td><code>issueToken</code></td><td>บางเรื่อง &quot;การถูกเรียก&quot; คือตัวพฤติกรรม เช่น ล็อกอินไม่ผ่านต้องไม่ออก token เลย</td><td>ล็อกกฎความปลอดภัย ถ้าใครเผลอออก token ผิดทาง test แดงทันที</td></tr>
+  <tr><td>Fake (ตารางจำลองในหน่วยความจำ)</td><td>challenge และ recovery code ใน UT-R</td><td>stub ตอบค่าเดิมทุกครั้ง แต่ race condition ต้องมีสถานะที่เปลี่ยนตามเวลา</td><td>จำลอง &quot;สองคำขอพร้อมกัน&quot; ได้โดยไม่ต้องมีฐานข้อมูลจริง และผลเหมือนเดิมทุกรอบ</td></tr>
+  <tr><td>Faker + seed คงที่</td><td>ข้อมูลผู้ใช้</td><td>ข้อมูลที่เขียนมือมักซ้ำแบบเดิมจนพลาดเคสแปลก</td><td>ข้อมูลหลากหลายโดยไม่ต้องเขียนเอง และ test แดงแล้วรันซ้ำได้ข้อมูลเดิม</td></tr>
+  <tr><td>Fake timers</td><td>UT-L14, UT-R4, <code>totp.test.ts</code></td><td>อายุ 5 นาทีและรอบ 30 วินาทีของ TOTP ไม่อยากรอจริง</td><td>ทดสอบค่าที่ขอบเวลาได้ในเสี้ยววินาที และไม่สุ่มพัง</td></tr>
+  <tr><td>Characterization test</td><td><code>params.test.ts</code></td><td>ไม่รู้ว่ามีใครพึ่งพฤติกรรมแปลกอยู่ จึงจดไว้ก่อนยังไม่แก้</td><td>ถ้าวันหลังมีคนแก้ test บอกทันทีว่าพฤติกรรมไหนเปลี่ยน</td></tr>
+  <tr><td>ค่าคาดหวังคำนวณจากสูตร</td><td><code>geo.test.ts</code></td><td>ถ้าเอาผลของโค้ดมาเป็นค่าคาดหวัง test จะเขียวเสมอแม้โค้ดผิด</td><td>test ตรวจความถูกต้องจริง</td></tr>
+  <tr><td>Red-green และลองทำให้ test แดงเอง</td><td>UT-R6 ถึง R8, mutation ด้วยมือ</td><td>test ที่ไม่เคยแดงอาจไม่ได้ตรวจอะไรเลย</td><td>มั่นใจว่าแก้ถูกจุด และ test จับ bug ได้จริง</td></tr>
+  <tr><td>Verification และ Validation</td><td>การหาจุดอ่อนในข้อ 2.2</td><td>แยกคำถาม &quot;เขียนถูกไหม&quot; กับ &quot;ตรงที่ผู้ใช้ต้องการไหม&quot;</td><td>ได้เหตุผลชัดว่าทำไมแก้แต่ละจุด ไม่ใช่แก้ตามความรู้สึก</td></tr>
+  <tr><td>Atomic update</td><td><code>updateMany</code> ที่มีเงื่อนไขใน WHERE</td><td>แก้ race condition ด้วย JavaScript ฝั่งเราไม่ได้ เพราะสองคำขอเห็นข้อมูลเก่าพร้อมกัน</td><td>ให้ฐานข้อมูลตัดสิน ทดสอบง่าย: สองคำขอพร้อมกันต้องมีผู้ชนะ 1 คนเสมอ</td></tr>
+  <tr><td>Component test (supertest + DB จริง)</td><td><code>listingIdParam.test.ts</code></td><td>ต้องการพิสูจน์ว่า route แปลง error เป็นคำตอบเดียวกันจริง unit test ตรวจได้แค่ว่าฟังก์ชัน throw</td><td>ตรวจสัญญาที่เขียนไว้ในคอมเมนต์ของ <code>parseId</code> ผ่าน HTTP จริง</td></tr>
+</table>
+
+<h2>7. วิธีรันและข้อจำกัดที่ทราบ</h2>
+<p>รันใน worktree ที่ <code>platform/api</code> (ต้องเปิด Postgres ที่ใช้เป็นฐานข้อมูลทดสอบ และมีไฟล์ <code>.env</code>)</p>
+<table>
+  <tr><th>คำสั่ง</th><th>ผลที่ได้</th></tr>
+  <tr><td><code>npx vitest run tests/unit/authLogin.test.ts</code></td><td>28 test ผ่าน (ข้อ 2.1 ถึง 2.3)</td></tr>
+  <tr><td><code>npx vitest run tests/unit/totp.test.ts tests/unit/geo.test.ts tests/unit/params.test.ts tests/feature/listingIdParam.test.ts</code></td><td>51 test ผ่าน (Lab 08)</td></tr>
+  <tr><td><code>git diff vv-original vv-improved --stat -- platform/api/src</code></td><td>เห็นว่าซอร์สเปลี่ยนไฟล์เดียว</td></tr>
+</table>
+
+<div class="warn">
+  <b>ข้อจำกัดที่ทราบ (ตามจริง)</b>
+  <ul>
+    <li>เรา <b>ไม่ได้รัน test backend ทั้งชุด</b> (227 ไฟล์) เพราะช้ามาก ไฟล์ <code>bookingLifecycle.test.ts</code> ไฟล์เดียวใช้ประมาณ 5 นาที จึงหยุดหลังรันได้ 4 ไฟล์ การตรวจผลกระทบของการแก้จึงอาศัย test เดิมที่เรียกโค้ดส่วนนี้ ได้แก่ <code>twoFactor</code>, <code>oauth</code>, <code>auth</code>, <code>bookingMaintenance</code> รวม 101 test ผ่านทั้งหมด</li>
+    <li>มี test แดงอยู่ก่อนแล้ว 1 ข้อ คือ <code>bookingAgreement.test.ts &gt; leaves a short hire as a single payment</code> เราลองคืน <code>auth.service.ts</code> เป็นเวอร์ชันเดิมแล้วรันข้อนี้ ก็แดงเหมือนกัน แปลว่าไม่เกี่ยวกับการแก้ของเรา (ยังไม่ได้หาสาเหตุ)</li>
+    <li><code>npm run typecheck</code> ล้มอยู่ก่อนแล้วที่ <code>labelParts.test.ts</code> (ดูหัวข้อที่พบในบทที่ 2) ไฟล์ที่เราเพิ่มไม่มีข้อผิดพลาดด้าน type</li>
+    <li>เพิ่ม <code>@faker-js/faker@9.9.0</code> เป็น devDependency ของ <code>platform/api</code> เพื่อใช้ในข้อ 2.3.6</li>
+  </ul>
+</div>
+
+<p class="foot">เอกสารฉบับเต็มและโค้ดอยู่ใน repo การบ้าน: <code>own-project/chaojakk/README.md</code> (Lab 08), <code>vv-unit-test-design.md</code> (ข้อ 2), <code>tests/</code> (test ทั้ง 5 ไฟล์) และ <code>vv-auth.service.diff</code> (ส่วนต่างของซอร์สที่แก้)</p>
+
+</body>
+</html>

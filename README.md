@@ -161,6 +161,7 @@ the acceptance test is committed **red** first, then the component and unit test
 | 2.3.5 Mock | `UT-B2` (token service with call expectations) in `login.test.ts`, `UT-C4` in `pollClosing.test.ts` |
 | 2.3.6 Faker-generated data | `UT-A7`, `UT-A8`, `UT-C1` (and the builders in `test/support/builders.ts`) |
 | Part 2 on my own project ChaoJakk (login + 2FA: design, V&V comparison, stub/spy/mock/Faker tests) | [own-project/chaojakk/vv-unit-test-design.md](own-project/chaojakk/vv-unit-test-design.md), test file `own-project/chaojakk/tests/unit/authLogin.test.ts`, source change `own-project/chaojakk/vv-auth.service.diff`; branches `vv-original` and `vv-improved` live in the ChaoJakk repository |
+| One-document summary of my own project work for the instructor (Thai, PDF, 7 pages) | [own-project/chaojakk/report/summary-chaojakk.pdf](own-project/chaojakk/report/summary-chaojakk.pdf) |
 | Summary of the techniques in my own words (Thai): which one, why, what it gives the testing | [docs/summary-th.md](docs/summary-th.md) |
 | README with setup and run steps | this file, section 1 |
 | Testing theory used | section 5 |
