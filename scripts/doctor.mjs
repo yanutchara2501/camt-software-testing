@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pre-workshop check: `npm run doctor`
+// Environment check: `npm run doctor`
 // Verifies tools, starts the test database, runs migrations and one test
 // at each boundary. Send a screenshot of the final summary to the organiser.
 import { spawnSync } from 'node:child_process';
@@ -45,7 +45,7 @@ function step(command) {
   };
 }
 
-console.log('\nElection workshop — environment doctor\n');
+console.log('\nElection testing project — environment doctor\n');
 
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 check('Node.js >= 24', () => [nodeMajor >= 24, `(v${process.versions.node})`], 'Install Node 24 LTS from https://nodejs.org');
@@ -69,6 +69,6 @@ console.log('\n─────────────────────�
 console.log(`OS       : ${os.type()} ${os.release()} (${os.arch()})`);
 console.log(`Node     : v${process.versions.node}`);
 console.log(`Checks   : ${results.length - failed.length}/${results.length} passed`);
-console.log(failed.length === 0 ? '✅ READY for the workshop — take a screenshot of this!' : '❌ NOT READY — fix the FAILED items above, then run `npm run doctor` again');
+console.log(failed.length === 0 ? '✅ READY — all checks passed' : '❌ NOT READY — fix the FAILED items above, then run `npm run doctor` again');
 console.log('────────────────────────────────────────\n');
 process.exit(failed.length === 0 ? 0 : 1);
