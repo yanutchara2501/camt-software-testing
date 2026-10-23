@@ -4,6 +4,7 @@ import { Candidate } from '../domain/types';
 export type NewCandidate = Omit<Candidate, 'id' | 'partyName'>;
 
 export interface CandidateRepository {
+  findById(id: number): Promise<Candidate | null>;
   findByDistrict(districtId: string): Promise<Candidate[]>;
   findByParty(partyId: number): Promise<Candidate[]>;
   create(candidate: NewCandidate): Promise<Candidate>;
@@ -16,6 +17,11 @@ const SELECT = `
 
 export class PgCandidateRepository implements CandidateRepository {
   constructor(private readonly pool: Pool) {}
+
+  async findById(id: number): Promise<Candidate | null> {
+    const { rows } = await this.pool.query<Candidate>(`${SELECT} WHERE c.id = $1`, [id]);
+    return rows[0] ?? null;
+  }
 
   async findByDistrict(districtId: string): Promise<Candidate[]> {
     const { rows } = await this.pool.query<Candidate>(`${SELECT} WHERE c.district_id = $1 ORDER BY c.number`, [

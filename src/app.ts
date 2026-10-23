@@ -6,6 +6,7 @@ import { DomainError } from './errors';
 import { CandidateRepository, PgCandidateRepository } from './repositories/candidateRepository';
 import { DistrictRepository, PgDistrictRepository } from './repositories/districtRepository';
 import { PartyRepository, PgPartyRepository } from './repositories/partyRepository';
+import { ElectionRepository, PgElectionRepository } from './repositories/electionRepository';
 import { PgUserRepository, UserRepository } from './repositories/userRepository';
 import { PgVoteRepository, VoteRepository } from './repositories/voteRepository';
 import { accountRoutes } from './routes/accountRoutes';
@@ -14,10 +15,9 @@ import { voteRoutes } from './routes/voteRoutes';
 import { AccountService } from './services/accountService';
 import { ElectionAdminService } from './services/electionAdminService';
 import { PollService } from './services/pollService';
+import { VoteService } from './services/voteService';
 
 export interface AppDeps {
-  /** Only the vote routes still need the raw pool; it goes away when they get a VoteRepository (temporary debt). */
-  pool: Pool;
   tokens: TokenService;
   clock: Clock;
   users: UserRepository;
@@ -25,12 +25,12 @@ export interface AppDeps {
   parties: PartyRepository;
   candidates: CandidateRepository;
   votes: VoteRepository;
+  election: ElectionRepository;
 }
 
 /** Real repositories on a real Pool — tests can override any of them. */
 export function pgDeps(pool: Pool, tokens: TokenService, overrides: Partial<AppDeps> = {}): AppDeps {
   return {
-    pool,
     tokens,
     clock: systemClock,
     users: new PgUserRepository(pool),
@@ -38,6 +38,7 @@ export function pgDeps(pool: Pool, tokens: TokenService, overrides: Partial<AppD
     parties: new PgPartyRepository(pool),
     candidates: new PgCandidateRepository(pool),
     votes: new PgVoteRepository(pool),
+    election: new PgElectionRepository(pool),
     ...overrides,
   };
 }
@@ -46,6 +47,7 @@ export function createApp(deps: AppDeps) {
   const accounts = new AccountService(deps.users, deps.districts, deps.tokens);
   const admin = new ElectionAdminService(deps.parties, deps.candidates, deps.districts);
   const poll = new PollService(deps.districts, deps.candidates, deps.votes, deps.clock);
+  const voting = new VoteService(deps.votes, deps.candidates, deps.districts, deps.election, deps.clock);
 
   const app = express();
   app.use(express.json());
@@ -55,7 +57,7 @@ export function createApp(deps: AppDeps) {
   });
   app.use(accountRoutes(accounts, deps.tokens));
   app.use(electionRoutes({ admin, poll, ...deps }));
-  app.use(voteRoutes(deps));
+  app.use(voteRoutes({ votes: voting, tokens: deps.tokens }));
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof DomainError) {

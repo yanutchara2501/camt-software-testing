@@ -223,19 +223,24 @@ describe('vote routes: characterization', () => {
         expect(response.body.candidateId).toBe(first.id);
       });
 
-      it('WEIRD: candidateId "abc" reaches the database and ends as a 500 instead of a 400', async () => {
-        const voter = await given.user(aVoter().inDistrict('CM-1'));
-        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      // This used to be: 'WEIRD: candidateId "abc" reaches the database and ends as a 500' (internal server error).
+      // Fixed on purpose in the V&V branch: bad input from the client is a 400, not a server error.
+      // It was the ONLY characterization test that went red when the route was rebuilt as VoteService,
+      // so I know that everything else in the behaviour stayed the same.
+      it.each([['abc'], [1.5], [-3], [true], ['1e3'], [[1]]])(
+        'rejects the malformed candidateId %j with 400 (was: 500 for "abc")',
+        async (candidateId) => {
+          const voter = await given.user(aVoter().inDistrict('CM-1'));
 
-        const response = await request(app)
-          .put('/me/vote')
-          .set('Authorization', `Bearer ${voter.token}`)
-          .send({ candidateId: 'abc' });
+          const response = await request(app)
+            .put('/me/vote')
+            .set('Authorization', `Bearer ${voter.token}`)
+            .send({ candidateId });
 
-        expect(response.status).toBe(500);
-        expect(response.body).toEqual({ error: 'internal server error' });
-        consoleError.mockRestore();
-      });
+          expect(response.status).toBe(400);
+          expect(response.body).toEqual({ error: 'candidateId must be a positive integer' });
+        },
+      );
 
       // This used to be: 'WEIRD: the token is accepted even without the "Bearer " prefix' (201).
       // Moving to the shared authenticate() middleware changed it on purpose: every other route already

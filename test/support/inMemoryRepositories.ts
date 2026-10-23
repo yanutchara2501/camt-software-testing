@@ -6,7 +6,8 @@ import { CandidateRepository, NewCandidate } from '../../src/repositories/candid
 import { DistrictRepository } from '../../src/repositories/districtRepository';
 import { NewParty, PartyRepository } from '../../src/repositories/partyRepository';
 import { NewUser, UserRepository } from '../../src/repositories/userRepository';
-import { VoteRepository } from '../../src/repositories/voteRepository';
+import { ElectionRepository } from '../../src/repositories/electionRepository';
+import { CandidateChoice, VoteRepository } from '../../src/repositories/voteRepository';
 
 export class InMemoryUserRepository implements UserRepository {
   readonly users: User[] = [];
@@ -88,6 +89,10 @@ export class InMemoryCandidateRepository implements CandidateRepository {
   // needs the party repository because a Candidate carries partyName (a JOIN in the real SQL)
   constructor(private readonly parties: PartyRepository) {}
 
+  async findById(id: number): Promise<Candidate | null> {
+    return this.candidates.find((c) => c.id === id) ?? null;
+  }
+
   async findByDistrict(districtId: string): Promise<Candidate[]> {
     return this.candidates.filter((c) => c.districtId === districtId).sort((a, b) => a.number - b.number);
   }
@@ -112,8 +117,31 @@ export class InMemoryVoteRepository implements VoteRepository {
   // needs the candidates because the real SQL only counts votes for candidates of the asked district
   constructor(private readonly candidates: CandidateRepository) {}
 
+  /** Test shortcut: put a vote in without any rules. */
   cast(voterId: number, candidateId: number): void {
     this.votes.set(voterId, candidateId);
+  }
+
+  /** What a voter chose, or undefined. For assertions. */
+  voteOf(voterId: number): number | undefined {
+    return this.votes.get(voterId);
+  }
+
+  async castVote(voterId: number, candidateId: number, _at: Date): Promise<{ changed: boolean }> {
+    const changed = this.votes.has(voterId);
+    this.votes.set(voterId, candidateId);
+    return { changed };
+  }
+
+  async choicesFor(districtId: string, voterId: number): Promise<CandidateChoice[]> {
+    const inDistrict = await this.candidates.findByDistrict(districtId);
+    return inDistrict.map((c) => ({
+      id: c.id,
+      number: c.number,
+      name: `${c.firstName} ${c.lastName}`,
+      party: c.partyName,
+      selected: this.votes.get(voterId) === c.id,
+    }));
   }
 
   async countByCandidate(districtId: string): Promise<Map<number, number>> {
@@ -123,5 +151,14 @@ export class InMemoryVoteRepository implements VoteRepository {
       if (inDistrict.has(candidateId)) tally.set(candidateId, (tally.get(candidateId) ?? 0) + 1);
     }
     return tally;
+  }
+}
+
+/** The election opening time is just a value that a test sets. */
+export class InMemoryElectionRepository implements ElectionRepository {
+  constructor(public opensAtValue: Date | null = null) {}
+
+  async opensAt(): Promise<Date | null> {
+    return this.opensAtValue;
   }
 }
