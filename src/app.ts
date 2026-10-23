@@ -10,12 +10,14 @@ import { PgUserRepository, UserRepository } from './repositories/userRepository'
 import { PgVoteRepository, VoteRepository } from './repositories/voteRepository';
 import { accountRoutes } from './routes/accountRoutes';
 import { electionRoutes } from './routes/electionRoutes';
-import voteRoutes from './routes/voteRoutes';
+import { voteRoutes } from './routes/voteRoutes';
 import { AccountService } from './services/accountService';
 import { ElectionAdminService } from './services/electionAdminService';
 import { PollService } from './services/pollService';
 
 export interface AppDeps {
+  /** Only the vote routes still need the raw pool; it goes away when they get a VoteRepository (temporary debt). */
+  pool: Pool;
   tokens: TokenService;
   clock: Clock;
   users: UserRepository;
@@ -28,6 +30,7 @@ export interface AppDeps {
 /** Real repositories on a real Pool — tests can override any of them. */
 export function pgDeps(pool: Pool, tokens: TokenService, overrides: Partial<AppDeps> = {}): AppDeps {
   return {
+    pool,
     tokens,
     clock: systemClock,
     users: new PgUserRepository(pool),
@@ -52,7 +55,7 @@ export function createApp(deps: AppDeps) {
   });
   app.use(accountRoutes(accounts, deps.tokens));
   app.use(electionRoutes({ admin, poll, ...deps }));
-  app.use(voteRoutes);
+  app.use(voteRoutes(deps));
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof DomainError) {

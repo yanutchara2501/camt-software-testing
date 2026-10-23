@@ -1,8 +1,13 @@
 // Voting — written in a hurry before the demo, never refactored.
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { pool } from '../db';
+import { Pool } from 'pg';
 
+export interface VoteRouteDeps {
+  pool: Pool;
+}
+
+export function voteRoutes({ pool }: VoteRouteDeps): Router {
 const router = Router();
 
 router.get('/me/candidates', async (req, res) => {
@@ -83,4 +88,5 @@ router.put('/me/vote', async (req, res) => {
   res.status(201).json({ candidateId: Number(candidateId), changed: false, votedAt: now });
 });
 
-export default router;
+return router;
+}
