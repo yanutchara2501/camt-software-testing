@@ -86,7 +86,10 @@ export class ElectionApi {
     const list = await this.request.get('/me/candidates', { headers: this.auth(voter) });
     const candidates: { id: number; number: number }[] = await list.json();
     const chosen = candidates.find((c) => c.number === number);
-    const response = await this.request.put('/me/vote', { headers: this.auth(voter), data: { candidateId: chosen!.id } });
+    const response = await this.request.put('/me/vote', {
+      headers: this.auth(voter),
+      data: { candidateId: chosen!.id },
+    });
     return response.status();
   }
 

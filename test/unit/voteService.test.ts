@@ -76,7 +76,9 @@ describe('VoteService.cast', () => {
     it.each(['COMMISSIONER', 'ADMIN'] as const)('VT-4: a %s cannot vote', async (role) => {
       const { service, votes, one } = await setUp();
 
-      await expect(service.cast({ ...voter, role }, one.id)).rejects.toThrow(new ForbiddenError('only voters can vote'));
+      await expect(service.cast({ ...voter, role }, one.id)).rejects.toThrow(
+        new ForbiddenError('only voters can vote'),
+      );
 
       expect(votes.voteOf(7)).toBeUndefined();
     });
@@ -198,17 +200,24 @@ describe('VoteService.cast', () => {
   });
 
   describe('generated data (Faker)', () => {
-    it.each([1, 2, 3, 4, 5])('VT-16: any voter of the district can vote for any candidate of it (seed %i)', async (seed) => {
-      faker.seed(seed);
-      const { service, votes, one, two } = await setUp();
-      const randomVoter: Principal = { userId: faker.number.int({ min: 1, max: 1_000_000 }), role: 'VOTER', districtId: 'CM-1' };
-      const chosen = faker.helpers.arrayElement([one, two]);
+    it.each([1, 2, 3, 4, 5])(
+      'VT-16: any voter of the district can vote for any candidate of it (seed %i)',
+      async (seed) => {
+        faker.seed(seed);
+        const { service, votes, one, two } = await setUp();
+        const randomVoter: Principal = {
+          userId: faker.number.int({ min: 1, max: 1_000_000 }),
+          role: 'VOTER',
+          districtId: 'CM-1',
+        };
+        const chosen = faker.helpers.arrayElement([one, two]);
 
-      const receipt = await service.cast(randomVoter, chosen.id);
+        const receipt = await service.cast(randomVoter, chosen.id);
 
-      expect(receipt).toMatchObject({ candidateId: chosen.id, changed: false });
-      expect(votes.voteOf(randomVoter.userId)).toBe(chosen.id);
-    });
+        expect(receipt).toMatchObject({ candidateId: chosen.id, changed: false });
+        expect(votes.voteOf(randomVoter.userId)).toBe(chosen.id);
+      },
+    );
   });
 });
 

@@ -62,10 +62,10 @@ export class PgUserRepository implements UserRepository {
   }
 
   async updateRole(id: number, role: Role): Promise<User | null> {
-    const { rows } = await this.pool.query<UserRow>(
-      `UPDATE users SET role = $2 WHERE id = $1 RETURNING ${COLUMNS}`,
-      [id, role],
-    );
+    const { rows } = await this.pool.query<UserRow>(`UPDATE users SET role = $2 WHERE id = $1 RETURNING ${COLUMNS}`, [
+      id,
+      role,
+    ]);
     return rows[0] ? toUser(rows[0]) : null;
   }
 }

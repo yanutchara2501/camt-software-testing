@@ -6,7 +6,11 @@ import { createTestPool, truncateAll } from './support/database';
 
 // Contract test: ONE set of expectations, run against the fake and against the real Postgres repository.
 // If both pass, the fake used in the unit tests behaves like the real thing (it is not "lying").
-function partyRepositoryContract(name: string, create: () => PartyRepository, reset: () => Promise<void> = async () => {}) {
+function partyRepositoryContract(
+  name: string,
+  create: () => PartyRepository,
+  reset: () => Promise<void> = async () => {},
+) {
   describe(`PartyRepository contract: ${name}`, () => {
     let repo: PartyRepository;
 

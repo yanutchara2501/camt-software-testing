@@ -233,6 +233,7 @@ Related ideas: state vs. behaviour verification, do not mock what you do not own
 |---|---|
 | `npm run doctor` | check tools, Docker, database, migrations and one test per level |
 | `npm run typecheck` | `tsc --noEmit` over source, tests and e2e |
+| `npm run format:check` / `npm run format` | check / apply the code style (Prettier, settings in `.prettierrc.json`) |
 | `npm run test:unit` | Jest `unit` project, no I/O |
 | `npm run test:coverage` | unit tests with coverage and the threshold gate (`coverage/` has the HTML report) |
 | `npm run test:integration` | start test Postgres (port 5433), run Liquibase, then Jest `integration` project in band |

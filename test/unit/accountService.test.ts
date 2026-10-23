@@ -3,7 +3,7 @@ import { Principal, TokenService } from '../../src/auth/tokenService';
 import { User } from '../../src/domain/types';
 import { ConflictError, UnauthorizedError, ValidationError } from '../../src/errors';
 import { DistrictRepository } from '../../src/repositories/districtRepository';
-import { NewUser, UserRepository } from '../../src/repositories/userRepository';
+import { NewUser } from '../../src/repositories/userRepository';
 import { AccountService, Registration } from '../../src/services/accountService';
 import { InMemoryUserRepository } from '../support/inMemoryRepositories';
 

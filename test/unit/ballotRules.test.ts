@@ -1,7 +1,7 @@
 import { whyBallotIsClosed } from '../../src/domain/ballotRules';
 
 // SPROUT: the new rule ("no voting after the poll is closed") was written as a small, pure function with its own tests,
-// instead of adding more `if`s in the middle of the legacy handler. These are plain unit tests, no database.
+// instead of adding more `if`s in the middle of the old vote handler. These are plain unit tests, no database.
 describe('whyBallotIsClosed', () => {
   const opensAt = new Date('2026-10-04T09:00:00.000Z');
   const closedAt = new Date('2026-10-04T15:00:00.000Z');

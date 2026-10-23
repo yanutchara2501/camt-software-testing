@@ -1,7 +1,11 @@
 import { Pool } from 'pg';
 import { PgVoteRepository, VoteRepository } from '../../src/repositories/voteRepository';
 import { aCandidate, aParty, aVoter } from '../support/builders';
-import { InMemoryCandidateRepository, InMemoryPartyRepository, InMemoryVoteRepository } from '../support/inMemoryRepositories';
+import {
+  InMemoryCandidateRepository,
+  InMemoryPartyRepository,
+  InMemoryVoteRepository,
+} from '../support/inMemoryRepositories';
 import { createTestPool, truncateAll } from './support/database';
 import { givenFor } from './support/given';
 import { JwtTokenService } from '../../src/auth/tokenService';
@@ -55,7 +59,10 @@ function voteRepositoryContract(name: string, prepare: () => Promise<World>) {
       const mine = await world.repo.choicesFor('CM-1', world.voters[0]);
       const other = await world.repo.choicesFor('CM-1', world.voters[1]);
 
-      expect(mine.map((c) => [c.number, c.selected])).toEqual([[1, false], [2, true]]);
+      expect(mine.map((c) => [c.number, c.selected])).toEqual([
+        [1, false],
+        [2, true],
+      ]);
       expect(other.map((c) => c.selected)).toEqual([false, false]);
     });
   });
@@ -64,8 +71,20 @@ function voteRepositoryContract(name: string, prepare: () => Promise<World>) {
 voteRepositoryContract('in-memory fake', async () => {
   const parties = new InMemoryPartyRepository();
   const candidates = new InMemoryCandidateRepository(parties);
-  const first = await candidates.create(aCandidate().inDistrict('CM-1').forParty((await parties.create(aParty().build())).id).numbered(1).build());
-  const second = await candidates.create(aCandidate().inDistrict('CM-1').forParty((await parties.create(aParty().build())).id).numbered(2).build());
+  const first = await candidates.create(
+    aCandidate()
+      .inDistrict('CM-1')
+      .forParty((await parties.create(aParty().build())).id)
+      .numbered(1)
+      .build(),
+  );
+  const second = await candidates.create(
+    aCandidate()
+      .inDistrict('CM-1')
+      .forParty((await parties.create(aParty().build())).id)
+      .numbered(2)
+      .build(),
+  );
   return { repo: new InMemoryVoteRepository(candidates), candidates: [first.id, second.id], voters: [1, 2] };
 });
 
@@ -80,10 +99,24 @@ describe('with the real database', () => {
 
   async function prepareWorld(): Promise<World> {
     await truncateAll(pool);
-    const first = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(1));
-    const second = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(2));
+    const first = await given.candidate(
+      aCandidate()
+        .inDistrict('CM-1')
+        .forParty((await given.party()).id)
+        .numbered(1),
+    );
+    const second = await given.candidate(
+      aCandidate()
+        .inDistrict('CM-1')
+        .forParty((await given.party()).id)
+        .numbered(2),
+    );
     const voters = [await given.user(aVoter().inDistrict('CM-1')), await given.user(aVoter().inDistrict('CM-1'))];
-    return { repo: new PgVoteRepository(pool), candidates: [first.id, second.id], voters: [voters[0].user.id, voters[1].user.id] };
+    return {
+      repo: new PgVoteRepository(pool),
+      candidates: [first.id, second.id],
+      voters: [voters[0].user.id, voters[1].user.id],
+    };
   }
 
   voteRepositoryContract('Postgres', prepareWorld);
@@ -104,4 +137,3 @@ describe('with the real database', () => {
     expect(rows.rows).toHaveLength(1); // and the voter still has exactly one vote
   });
 });
-

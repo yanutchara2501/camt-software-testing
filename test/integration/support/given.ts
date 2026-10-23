@@ -45,7 +45,7 @@ export function givenFor(pool: Pool, tokens: TokenService) {
       return candidates.create(builder.build());
     },
 
-    /** Puts a vote straight into the table (the vote route itself is legacy code and is not used here). */
+    /** Puts a vote straight into the table, so a test can arrange votes without going through the vote route. */
     async vote(voter: User, candidate: Candidate): Promise<void> {
       await pool.query('INSERT INTO votes (voter_id, candidate_id, updated_at) VALUES ($1, $2, now())', [
         voter.id,

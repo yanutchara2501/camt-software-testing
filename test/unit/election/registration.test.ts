@@ -54,7 +54,11 @@ describe('AccountService.register', () => {
       const users = new InMemoryUserRepository();
       const service = new AccountService(users, districtsWithCm1, unusedTokens);
 
-      const result = await service.register({ ...validRegistration(), firstName: '  Somchai ', address: ' 239 Huay Kaew Rd ' });
+      const result = await service.register({
+        ...validRegistration(),
+        firstName: '  Somchai ',
+        address: ' 239 Huay Kaew Rd ',
+      });
 
       expect(result).toEqual({
         id: expect.any(Number),
@@ -143,19 +147,22 @@ describe('AccountService.register', () => {
       };
     }
 
-    it.each([1, 2, 3, 4, 5, 6, 7, 8])('UT-A7: any well-formed random citizen can register (faker seed %i)', async (seed) => {
-      faker.seed(seed);
-      fakerTH.seed(seed);
-      const registration = generatedRegistration();
-      const users = new InMemoryUserRepository();
-      const service = new AccountService(users, districtsWithCm1, unusedTokens);
+    it.each([1, 2, 3, 4, 5, 6, 7, 8])(
+      'UT-A7: any well-formed random citizen can register (faker seed %i)',
+      async (seed) => {
+        faker.seed(seed);
+        fakerTH.seed(seed);
+        const registration = generatedRegistration();
+        const users = new InMemoryUserRepository();
+        const service = new AccountService(users, districtsWithCm1, unusedTokens);
 
-      const result = await service.register(registration);
+        const result = await service.register(registration);
 
-      expect(result).toMatchObject({ nationalId: registration.nationalId, districtId: 'CM-1', role: 'VOTER' });
-      expect(result).not.toHaveProperty('passwordHash');
-      expect(verifyPassword(registration.password, users.users[0].passwordHash)).toBe(true);
-    });
+        expect(result).toMatchObject({ nationalId: registration.nationalId, districtId: 'CM-1', role: 'VOTER' });
+        expect(result).not.toHaveProperty('passwordHash');
+        expect(verifyPassword(registration.password, users.users[0].passwordHash)).toBe(true);
+      },
+    );
 
     it('UT-A8: any random citizen with a broken national id is rejected and nothing is saved', async () => {
       const users = new InMemoryUserRepository();

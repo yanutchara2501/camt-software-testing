@@ -9,8 +9,8 @@ import { createTestPool, truncateAll } from './support/database';
 import { givenFor } from './support/given';
 
 // CHARACTERIZATION TESTS (Feathers, "Working Effectively with Legacy Code").
-// They do not say what the vote route SHOULD do. They pin down what it DOES today, so that I can change the
-// code around it and see immediately if I changed the behaviour by accident.
+// They do not say what the vote route SHOULD do. They pin down what it DOES, so that a change to the code
+// around it shows immediately if the behaviour moved by accident.
 // A "weird" result is written down as it is and marked with WEIRD, but not fixed here.
 describe('vote routes: characterization', () => {
   // The clock is injected now, so the test no longer depends on the real time.
@@ -33,8 +33,18 @@ describe('vote routes: characterization', () => {
   beforeEach(async () => {
     await truncateAll(pool);
     await given.electionOpenedAt(new Date('2026-10-04T09:00:00.000Z')); // opened an hour before the fixed clock
-    first = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(1));
-    second = await given.candidate(aCandidate().inDistrict('CM-1').forParty((await given.party()).id).numbered(2));
+    first = await given.candidate(
+      aCandidate()
+        .inDistrict('CM-1')
+        .forParty((await given.party()).id)
+        .numbered(1),
+    );
+    second = await given.candidate(
+      aCandidate()
+        .inDistrict('CM-1')
+        .forParty((await given.party()).id)
+        .numbered(2),
+    );
   });
 
   afterAll(async () => {
@@ -190,7 +200,11 @@ describe('vote routes: characterization', () => {
       });
 
       it('does not stop voters of another district', async () => {
-        const other = await given.candidate(aCandidate().inDistrict('CM-2').forParty((await given.party()).id));
+        const other = await given.candidate(
+          aCandidate()
+            .inDistrict('CM-2')
+            .forParty((await given.party()).id),
+        );
         const voter = await given.user(aVoter().inDistrict('CM-2'));
 
         const response = await request(app)
@@ -206,7 +220,10 @@ describe('vote routes: characterization', () => {
       it('WEIRD: candidateId 0 is treated as "missing" (400), because the code checks for a falsy value', async () => {
         const voter = await given.user(aVoter().inDistrict('CM-1'));
 
-        const response = await request(app).put('/me/vote').set('Authorization', `Bearer ${voter.token}`).send({ candidateId: 0 });
+        const response = await request(app)
+          .put('/me/vote')
+          .set('Authorization', `Bearer ${voter.token}`)
+          .send({ candidateId: 0 });
 
         expect(response.status).toBe(400);
       });
@@ -249,7 +266,10 @@ describe('vote routes: characterization', () => {
       it('requires the "Bearer " prefix, like every other route', async () => {
         const voter = await given.user(aVoter().inDistrict('CM-1'));
 
-        const response = await request(app).put('/me/vote').set('Authorization', voter.token).send({ candidateId: first.id });
+        const response = await request(app)
+          .put('/me/vote')
+          .set('Authorization', voter.token)
+          .send({ candidateId: first.id });
 
         expect(response.status).toBe(401);
       });
@@ -261,15 +281,21 @@ describe('vote routes: characterization', () => {
 
       await request(app).put('/me/vote').set('Authorization', `Bearer ${voter.token}`).send({ candidateId: first.id });
 
-      expect(log).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^\\[vote\\] voter ${voter.user.id} voted for ${first.id} at `)));
+      expect(log).toHaveBeenCalledWith(
+        expect.stringMatching(new RegExp(`^\\[vote\\] voter ${voter.user.id} voted for ${first.id} at `)),
+      );
       log.mockRestore();
     });
   });
 
   describe('GET /me/candidates', () => {
-    it('lists the candidates of the voter\'s own district in number order, none selected at first', async () => {
+    it("lists the candidates of the voter's own district in number order, none selected at first", async () => {
       const voter = await given.user(aVoter().inDistrict('CM-1'));
-      await given.candidate(aCandidate().inDistrict('CM-2').forParty((await given.party()).id)); // other district
+      await given.candidate(
+        aCandidate()
+          .inDistrict('CM-2')
+          .forParty((await given.party()).id),
+      ); // other district
 
       const response = await request(app).get('/me/candidates').set('Authorization', `Bearer ${voter.token}`);
 

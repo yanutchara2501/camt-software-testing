@@ -62,7 +62,9 @@ describe('closing a poll (component test: app + real Postgres)', () => {
       const commissioner = await given.user(aCommissioner());
       await request(app).post('/districts/CM-3/close').set('Authorization', `Bearer ${commissioner.token}`);
 
-      const second = await request(app).post('/districts/CM-3/close').set('Authorization', `Bearer ${commissioner.token}`);
+      const second = await request(app)
+        .post('/districts/CM-3/close')
+        .set('Authorization', `Bearer ${commissioner.token}`);
 
       expect(second.status).toBe(409);
     });
