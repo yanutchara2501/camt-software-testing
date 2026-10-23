@@ -1,0 +1,31 @@
+# My test cases for the election system
+
+These are the test cases I prepared in Lab 00 (step 5) and sorted by boundary in Lab 01.
+The IDs are used again in the later branches, so the tests can be traced back to a case.
+
+| ID | Given | When | Then | Boundary | Test double needed | Test data needed |
+|---|---|---|---|---|---|---|
+| TC-01 | A voter in district CM-1 who has not voted yet | The voter votes for candidate number 2 of CM-1 | The vote is saved and `GET /me/candidates` shows number 2 as selected | Component | none (real DB) | district CM-1, 2 parties, 2 candidates, 1 voter |
+| TC-02 | A registration with a valid national id and a strong password | `AccountService.register` is called | A public user is returned and it has no `passwordHash` | Unit | stub `DistrictRepository`, spy `UserRepository` | valid national id |
+| TC-03 | A registration whose national id has a wrong checksum digit | `register` is called | `ValidationError` ("invalid national id") | Unit | none | invalid id `1509900000018` |
+| TC-04 | A national id that is already registered | `register` is called with the same id | `ConflictError` | Unit | stub `UserRepository.findByNationalId` | existing user |
+| TC-05 | A registered voter | The voter logs in with the wrong password | `UnauthorizedError`, and no token is issued | Unit | mock `TokenService` (must not be called) | stored user with a real hash |
+| TC-06 | A commissioner and a party that already exists | The commissioner creates a party with the same name | `ConflictError` (409) | Unit | fake `PartyRepository` | party "Alpha" |
+| TC-07 | District CM-1 already has candidate number 1 | A commissioner adds another candidate with number 1 | `ConflictError` (409) | Unit | fake repositories | 1 existing candidate |
+| TC-08 | The election has not opened yet | A voter calls `PUT /me/vote` | 409 "election is not open" | Component | none (real DB) | election row with `opens_at` in the future |
+| TC-09 | A voter token | The voter calls `POST /parties` | 403 | Component | none | voter token |
+| TC-10 | A district with votes cast, poll still open | Anyone calls `GET /districts/:id/results` | `closed: false` and no vote counts in the body | Component | none | candidates + votes |
+| TC-11 | A JWT that has expired | The token is verified | `null` (not authenticated) | Unit | fake timers | token with 60 s lifetime |
+| TC-12 | Register, login, vote, change vote, commissioner closes the poll | The public results are read | Counts are correct for every candidate | End-to-end | none | full journey |
+
+## Boundary count
+
+```
+        /\         e2e         : 1
+       /  \        component   : 4
+      /    \       integration : 0 (repository tests come in Lab 04)
+     /______\      unit        : 7
+```
+
+The shape is close to a pyramid. The only e2e case (TC-12) is the one that proves
+that all parts are wired together, the rest can be checked at a lower level.
