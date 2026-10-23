@@ -1,0 +1,69 @@
+diff --git a/platform/api/src/modules/auth/auth.service.ts b/platform/api/src/modules/auth/auth.service.ts
+index 0ef3a69c..f4ae9a74 100644
+--- a/platform/api/src/modules/auth/auth.service.ts
++++ b/platform/api/src/modules/auth/auth.service.ts
+@@ -392,6 +392,23 @@ export async function redeemTwoFactorChallenge(
+   })
+   if (!user) throw expired
+ 
++  /**
++   * The password step checked this, but five minutes can pass between that step
++   * and this one. An account suspended in the gap must not get a token from a
++   * challenge that was issued before it was suspended.
++   */
++  if (user.status !== 'active') {
++    await recordAudit({
++      actorId: user.id,
++      action: 'auth.login_failed',
++      subjectType: AuditSubject.user,
++      subjectId: user.id,
++      metadata: { reason: 'account_inactive' },
++      context,
++    })
++    throw new ValidationError({ code: ['บัญชีนี้ยังไม่พร้อมใช้งาน'] })
++  }
++
+   const code = input.code.trim()
+   const passes =
+     verifySecondFactor(user.twoFactor?.secretEncrypted, code) ||
+@@ -409,10 +426,16 @@ export async function redeemTwoFactorChallenge(
+   }
+ 
+   // Single use: mark it consumed before issuing anything.
+-  await prisma.twoFactorChallenge.update({
+-    where: { id: challenge.id },
++  //
++  // The check at the top (`consumedAt` is null) and this write are two separate
++  // statements, so two requests arriving together could both pass the check.
++  // `updateMany` with `consumedAt: null` in the WHERE makes the database decide:
++  // only one of them changes a row, and the other is told it changed none.
++  const consumed = await prisma.twoFactorChallenge.updateMany({
++    where: { id: challenge.id, consumedAt: null },
+     data: { consumedAt: new Date() },
+   })
++  if (consumed.count !== 1) throw expired
+ 
+   const token = await issueToken(user.id, 'chaojakk-pwa', context, user.role)
+ 
+@@ -456,14 +479,18 @@ async function consumeRecoveryCode(userId: bigint, code: string): Promise<boolea
+   if (!codes.includes(normalized)) return false
+ 
+   // One-time use: drop it so the same code cannot be replayed.
+-  await prisma.userTwoFactor.update({
+-    where: { userId },
++  //
++  // Read, remove, write back is a race: two requests holding the same code both
++  // read the full list and both succeed. Writing only if the stored value is
++  // still the one that was read (compare-and-swap) lets exactly one win.
++  const dropped = await prisma.userTwoFactor.updateMany({
++    where: { userId, recoveryCodesEncrypted: record.recoveryCodesEncrypted },
+     data: {
+       recoveryCodesEncrypted: encrypt(JSON.stringify(codes.filter((c) => c !== normalized))),
+     },
+   })
+ 
+-  return true
++  return dropped.count === 1
+ }
+ 
+ /**

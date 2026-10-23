@@ -98,3 +98,15 @@ The score barely moves because ChaoJakk was already well tested. The value of th
 Test boundaries and the pyramid, unit vs component tests, characterization tests, equivalence partitioning and boundary values (TOTP window, id shapes),
 worked-out expected values instead of copying the code's output, test isolation, mutation checks (temporary change to the source to prove a test can fail),
 and a readiness checklist to choose the next improvement.
+
+## สรุปเทคนิคที่ใช้ใน Lab 08 (ภาษาเราเอง)
+
+| เทคนิค | ใช้ที่ไหน | เพราะอะไรถึงเลือก | มีประโยชน์กับการเทสยังไง |
+|---|---|---|---|
+| **Characterization test** (จดว่าโค้ดทำอะไรอยู่ตอนนี้) | `params.test.ts` กับ `parseId` | ไม่รู้ว่ามีใครพึ่งพฤติกรรมแปลก ๆ อยู่ไหม จึงยังไม่แก้ แค่จดไว้ก่อน | ถ้าวันหลังมีคนแก้ `parseId` test จะบอกทันทีว่าพฤติกรรมไหนเปลี่ยน ตอนนี้ได้รายการ "ของแปลก" 4 ข้อไว้ทำต่อ |
+| **ค่าคาดหวังคำนวณจากสูตร ไม่ใช่ copy จากผลของโค้ด** | `geo.test.ts` (1 องศา = 111,195 ม. จาก 2πR/360) | ถ้าเอาผลที่โค้ดตอบมาเป็นค่าคาดหวัง test จะเขียวเสมอแม้โค้ดผิด | test ตรวจความถูกต้องจริง ลองเปลี่ยนรัศมีโลกในโค้ด test แดง 4 ข้อ |
+| **ตรึงเวลา (fake timers)** | `totp.test.ts` | รหัส 2FA เปลี่ยนทุก 30 วินาที ถ้าใช้เวลาจริง test จะสุ่มพัง | ทดสอบ "ช้าไป 1 ช่วง / เร็วไป 1 ช่วง / เกิน 2 ช่วง" ได้แม่นและซ้ำได้ |
+| **Boundary value analysis** | หน้าต่างเวลา ±1 ช่วงของ TOTP | บั๊กชอบอยู่ที่ขอบ | แก้ `window: 1` เป็น 0 ในโค้ด test แดง 2 ข้อ |
+| **Component test (supertest + Postgres จริง)** | `listingIdParam.test.ts` | อยากรู้ว่า route แปลงข้อผิดพลาดเป็นคำตอบเดียวกันจริงไหม unit test ตรวจแค่ว่าฟังก์ชัน throw | พิสูจน์สัญญาในคอมเมนต์ของ `parseId` ว่า id แปลก ๆ ตอบเหมือน id ที่ไม่มี |
+| **ลองทำให้ test แดงเอง (mutation check)** | แก้ซอร์สชั่วคราวแล้วคืน | test ที่ไม่เคยแดงอาจไม่ได้เทสอะไร | มั่นใจว่า test จับ bug ได้จริง |
+| **Readiness checklist** | ตารางคะแนน 17 -> 18 | ให้มีหลักฐานว่าควรทำอะไรต่อ ไม่ใช่เดา | เห็นว่าจุดอ่อนจริงคือ unit test ยังต้องรอฐานข้อมูล และ typecheck พังอยู่แล้วบน `origin/main` |

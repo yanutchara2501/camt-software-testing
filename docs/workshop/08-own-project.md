@@ -8,6 +8,9 @@ Branch: `step/08-own-project`
 > of `parseId`, findings, readiness checklist 17 -> 18 of 24) and the four new test files.
 > Those tests only run inside the ChaoJakk repository (they need its code and database), so they are not part of `npm test` here.
 >
+> Part 2 of the assignment (unit test design, V&V code comparison, stub/spy/mock/Faker tests) was also done on ChaoJakk, for the login and two-factor
+> feature: [vv-unit-test-design.md](../../own-project/chaojakk/vv-unit-test-design.md). A summary in Thai of every technique used is in [summary-th.md](../summary-th.md).
+>
 > The rest of this page is the same lab done on the election backend of this repository, which is the application used in the
 > earlier steps. It is kept as a worked example.
 
