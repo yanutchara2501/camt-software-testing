@@ -2,7 +2,16 @@
 
 Branch: `step/08-own-project`
 
-The project under test is the election backend in this repository (Express + TypeScript + PostgreSQL + Liquibase).
+> **My own project is ChaoJakk** (a marketplace for hiring construction machinery: Vue 3 + Express + Prisma + PostgreSQL).
+> I applied this lab to it in a separate repository, on the branch `testing-workshop`. Everything from that work is copied into
+> [`own-project/chaojakk/`](../../own-project/chaojakk/README.md) so it can be read here: the write-up (harness inventory, characterization
+> of `parseId`, findings, readiness checklist 17 -> 18 of 24) and the four new test files.
+> Those tests only run inside the ChaoJakk repository (they need its code and database), so they are not part of `npm test` here.
+>
+> The rest of this page is the same lab done on the election backend of this repository, which is the application used in the
+> earlier steps. It is kept as a worked example.
+
+The project under test below is the election backend in this repository (Express + TypeScript + PostgreSQL + Liquibase).
 The goal of this step is not "everything", it is **real tests that run with one command** and knowing the next step.
 
 ## Step 1 - Test harness

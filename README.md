@@ -134,7 +134,7 @@ Use `git log --oneline --graph --all` to see the history.
 | `step/05-ci` | Lab 05: CI pipeline, coverage gate, migration rollback test | [05-ci.md](docs/workshop/05-ci.md) |
 | `step/06-outside-in` | Lab 06: outside-in TDD, "close the poll" feature | [06-outside-in.md](docs/workshop/06-outside-in.md) |
 | `step/07-legacy` | Lab 07: characterization tests, seams, sprout | [07-legacy.md](docs/workshop/07-legacy.md) |
-| `step/08-own-project` | Lab 08: apply everything, checklist round 2 | [08-own-project.md](docs/workshop/08-own-project.md) |
+| `step/08-own-project` | Lab 08: apply everything, checklist round 2 (worked on the election backend; my own project ChaoJakk is in [own-project/chaojakk](own-project/chaojakk/README.md), available on `main`) | [08-own-project.md](docs/workshop/08-own-project.md) |
 | `election/original` | 2.2: the code **before** V&V (first commit, untouched) | [code-comparison.md](docs/election-app/code-comparison.md) |
 | `election/unit-tests` | 2.1 + 2.3: unit test design and unit test suite | [unit-test-design.md](docs/election-app/unit-test-design.md) |
 | `election/vv-improved` | 2.2: the code **after** V&V, with tests | [code-comparison.md](docs/election-app/code-comparison.md) |
@@ -148,7 +148,7 @@ the acceptance test is committed **red** first, then the component and unit test
 
 | Requirement | Where |
 |---|---|
-| 1. Re-implement the workshop tasks, one branch per step, commit step by step | branches `step/00-setup` ... `step/08-own-project` (section 3) |
+| 1. Re-implement the workshop tasks, one branch per step, commit step by step | branches `step/00-setup` ... `step/08-own-project` (section 3); Lab 08 on my own project ChaoJakk: [own-project/chaojakk](own-project/chaojakk/README.md) |
 | 1. Explain the concepts of each branch in my own words | `docs/workshop/NN-*.md`, summary in section 5 |
 | 2.1 Unit test design | [docs/election-app/unit-test-design.md](docs/election-app/unit-test-design.md) |
 | 2.2 Branch with the original code | `election/original` |
