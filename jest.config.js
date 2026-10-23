@@ -16,6 +16,7 @@ module.exports = {
       testEnvironment: 'node',
       transform: tsJest,
       testMatch: ['<rootDir>/test/unit/**/*.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/test/support/setupFaker.ts'],
     },
     {
       displayName: 'integration',
@@ -23,6 +24,7 @@ module.exports = {
       transform: tsJest,
       testMatch: ['<rootDir>/test/integration/**/*.test.ts'],
       setupFiles: ['<rootDir>/test/integration/env.ts'],
+      setupFilesAfterEnv: ['<rootDir>/test/support/setupFaker.ts'],
     },
   ],
 };
