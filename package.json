@@ -1,5 +1,5 @@
 {
-  "name": "election-testing",
+  "name": "camt-software-testing",
   "version": "1.0.0",
   "private": true,
   "description": "Election backend with a layered automated test suite (software testing assignment)",

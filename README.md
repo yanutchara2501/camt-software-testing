@@ -39,8 +39,8 @@ The **unit tests need no Docker and no database**.
 
 ```bash
 # 1. get the code
-git clone <url-of-this-repository> election-testing
-cd election-testing
+git clone <url-of-this-repository> camt-software-testing
+cd camt-software-testing
 
 # 2. install the dependencies
 npm ci
