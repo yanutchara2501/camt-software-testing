@@ -29,3 +29,20 @@ The IDs are used again in the later branches, so the tests can be traced back to
 
 The shape is close to a pyramid. The only e2e case (TC-12) is the one that proves
 that all parts are wired together, the rest can be checked at a lower level.
+
+## Where each case is automated (traceability)
+
+| ID | Automated in |
+|---|---|
+| TC-01 | `test/integration/vote.characterization.test.ts` (records the first vote; marks the chosen candidate in `GET /me/candidates`) |
+| TC-02 | `test/unit/accountService.test.ts` (registers a voter; does not return the password hash) |
+| TC-03 | `test/unit/accountService.test.ts` (does not save anything when the national id is invalid) |
+| TC-04 | `test/unit/accountService.test.ts` (rejects a national id that is already registered) |
+| TC-05 | `test/unit/accountService.test.ts` (rejects a wrong password without issuing a token) |
+| TC-06 | `test/unit/electionAdminService.test.ts` (rejects a party name that already exists) |
+| TC-07 | `test/unit/electionAdminService.test.ts` (rejects a candidate number already used in the district) |
+| TC-08 | `test/integration/vote.characterization.test.ts` (409 "election is not open") |
+| TC-09 | `test/integration/elections.test.ts` (`POST /parties` answers 403 to a voter) |
+| TC-10 | `test/integration/poll.test.ts` and `test/unit/pollService.test.ts` (no scores while the poll is open) |
+| TC-11 | `test/unit/jwtTokenService.test.ts` (rejects the token 61 seconds after it was issued) |
+| TC-12 | `e2e/close-poll.spec.ts` |

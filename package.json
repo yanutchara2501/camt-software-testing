@@ -17,6 +17,7 @@
     "db:migrate:test": "docker compose run --rm --build liquibase update",
     "db:reset:test": "docker compose up -d --force-recreate --wait db-test",
     "test": "npm run test:unit && npm run test:integration",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "jest --selectProjects unit",
     "test:coverage": "jest --selectProjects unit --coverage --coverageReporters=text --coverageReporters=html",
     "db:test-rollback": "npm run db:reset:test && docker compose run --rm --build liquibase update-testing-rollback",
