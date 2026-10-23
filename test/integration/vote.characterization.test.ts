@@ -190,12 +190,16 @@ describe('vote routes: characterization', () => {
         consoleError.mockRestore();
       });
 
-      it('WEIRD: the token is accepted even without the "Bearer " prefix', async () => {
+      // This used to be: 'WEIRD: the token is accepted even without the "Bearer " prefix' (201).
+      // Moving to the shared authenticate() middleware changed it on purpose: every other route already
+      // requires the Bearer scheme, so the vote route now does the same. The old test went red and I updated it
+      // knowingly (see docs/workshop/07-legacy.md).
+      it('requires the "Bearer " prefix, like every other route', async () => {
         const voter = await given.user(aVoter().inDistrict('CM-1'));
 
         const response = await request(app).put('/me/vote').set('Authorization', voter.token).send({ candidateId: first.id });
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(401);
       });
     });
 
